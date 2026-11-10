@@ -39,10 +39,12 @@
 <div class="formfield"><label for="entryVerified">Verification status</label><select id="entryVerified"><option value="unverified">Awaiting WAA review</option></select></div>
 </div><div class="modal-actions"><button type="button" class="smallbtn" id="cancelEntry">Cancel</button><button type="submit" class="primary">Save resource</button></div></form></div></div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
+
 <script>
 (()=>{'use strict';
+
 const REGIONS=['Africa','Europe','Asia','North America','Latin America & Caribbean','Oceania'];
-const REGION_ALIAS={'Latin America & Caribbean':'South America'};
+
 const CATEGORIES=[
 {icon:'🎨',title:'Artists & Creative Professionals',desc:'Artists, makers, designers and creative voices.'},
 {icon:'🗿',title:'Artworks & Art Forms',desc:'Painting, sculpture, craft, digital and more.'},
@@ -53,7 +55,7 @@ const CATEGORIES=[
 {icon:'✨',title:'Opportunities & Development',desc:'Residencies, grants, open calls and commissions.'},
 {icon:'🤝',title:'Art Business & Professional Services',desc:'Markets, consultants, licensing and support.'}
 ];
-// Country names are a navigation index, not a claim that WAA has verified art listings in each place.
+
 const COUNTRY_DATA={
 'Africa':['Algeria','Angola','Benin','Botswana','Burkina Faso','Burundi','Cabo Verde','Cameroon','Central African Republic','Chad','Comoros','Congo','Democratic Republic of the Congo','Djibouti','Egypt','Equatorial Guinea','Eritrea','Eswatini','Ethiopia','Gabon','Gambia','Ghana','Guinea','Guinea-Bissau','Ivory Coast','Kenya','Lesotho','Liberia','Libya','Madagascar','Malawi','Mali','Mauritania','Mauritius','Morocco','Mozambique','Namibia','Niger','Nigeria','Rwanda','Sao Tome and Principe','Senegal','Seychelles','Sierra Leone','Somalia','South Africa','South Sudan','Sudan','Tanzania','Togo','Tunisia','Uganda','Zambia','Zimbabwe'],
 'Europe':['Albania','Andorra','Armenia','Austria','Azerbaijan','Belarus','Belgium','Bosnia and Herzegovina','Bulgaria','Croatia','Cyprus','Czechia','Denmark','Estonia','Finland','France','Georgia','Germany','Greece','Hungary','Iceland','Ireland','Italy','Kazakhstan','Kosovo','Latvia','Liechtenstein','Lithuania','Luxembourg','Malta','Moldova','Monaco','Montenegro','Netherlands','North Macedonia','Norway','Poland','Portugal','Romania','Russia','San Marino','Serbia','Slovakia','Slovenia','Spain','Sweden','Switzerland','Turkey','Ukraine','United Kingdom','Vatican City'],
@@ -62,35 +64,701 @@ const COUNTRY_DATA={
 'Latin America & Caribbean':['Argentina','Bolivia','Brazil','Chile','Colombia','Ecuador','Guyana','Paraguay','Peru','Suriname','Uruguay','Venezuela'],
 'Oceania':['Australia','Fiji','Kiribati','Marshall Islands','Micronesia','Nauru','New Zealand','Palau','Papua New Guinea','Samoa','Solomon Islands','Tonga','Tuvalu','Vanuatu']
 };
+
 const allCountries=Object.entries(COUNTRY_DATA).flatMap(([region,names])=>names.map(name=>({name,region})));
+
 const BASE_RECORDS=[
 {id:'waa-global-art-hub',title:'WAA Global Art Hub',type:'WAA resource',country:'Global',region:'Global',city:'Online',category:'Cultures & Art Heritage',description:'Worldwide Art Advocacy’s gateway to global art promotion, artist development, cultural research and creative collaboration.',url:'https://worldwideartadvocacy.org/global-art-hub/',tags:['WAA','global art','artist development','culture'],verified:'verified',source:'Worldwide Art Advocacy',updated:'2026-11-10'},
 {id:'waa-home',title:'Worldwide Art Advocacy',type:'WAA resource',country:'Global',region:'Global',city:'Online',category:'Art Business & Professional Services',description:'An international art advocacy platform promoting artists, preserving culture and connecting creative communities.',url:'https://worldwideartadvocacy.org/',tags:['WAA','art advocacy','artists','culture'],verified:'verified',source:'Worldwide Art Advocacy',updated:'2026-11-10'},
 {id:'waa-open-calls',title:'Global Artist Open Calls & Competitions',type:'WAA resource',country:'Global',region:'Global',city:'Online',category:'Opportunities & Development',description:'WAA’s open-call and competition resource gateway. Follow the linked page for current listings and original organiser details.',url:'https://worldwideartadvocacy.org/global-artist-open-calls-competitions/',tags:['open calls','competitions','opportunities','WAA'],verified:'unverified',source:'WAA page reference; individual listings require checking',updated:'2026-11-10'}
 ];
-const STORE='waa_global_art_explorer_records_v1';let records=[];let activeRegion='';let activeCategory='';let selectedCountry='';let globeInstance=null;let globeReady=false;
-const $=id=>document.getElementById(id);const safeURL=u=>{try{const x=new URL(String(u||''),location.href);return ['http:','https:'].includes(x.protocol)?x.href:'#'}catch(e){return '#'}};const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function notify(msg){const el=$('status');el.textContent=msg;el.classList.add('show');clearTimeout(notify.timer);notify.timer=setTimeout(()=>el.classList.remove('show'),3200)}
-function regionOf(country){return allCountries.find(c=>c.name.toLowerCase()===String(country).toLowerCase())?.region||''}
-function loadRecords(){try{const saved=JSON.parse(localStorage.getItem(STORE)||'null');records=Array.isArray(saved)?saved:BASE_RECORDS.slice()}catch(e){records=BASE_RECORDS.slice()}}
-function saveRecords(){localStorage.setItem(STORE,JSON.stringify(records))}
-function buildRegions(){const box=$('regionButtons');REGIONS.forEach(r=>{const b=document.createElement('button');b.className='region-btn';b.textContent=r;b.dataset.region=r;b.addEventListener('click',()=>selectRegion(r));box.appendChild(b)});REGIONS.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;$('filterRegion').appendChild(o)})}
-function buildCountries(){allCountries.sort((a,b)=>a.name.localeCompare(b.name));const selects=[$('countrySelect'),$('entryCountry')];selects.forEach(sel=>{const groups={};REGIONS.forEach(r=>groups[r]=[]);allCountries.forEach(c=>groups[c.region].push(c.name));REGIONS.forEach(r=>{const og=document.createElement('optgroup');og.label=r;groups[r].forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;og.appendChild(o)});sel.appendChild(og)})});$('filterRegion').value=''}
-function buildCategories(){CATEGORIES.forEach(c=>{const b=document.createElement('button');b.className='category';b.innerHTML=`<span class="ico">${c.icon}</span><strong>${esc(c.title)}</strong><small>${esc(c.desc)}</small>`;b.addEventListener('click',()=>{activeCategory=activeCategory===c.title?'':c.title;document.querySelectorAll('.category').forEach((x,i)=>x.classList.toggle('active',CATEGORIES[i].title===activeCategory));$('filterCategory').value=activeCategory;renderResults();$('directory').scrollIntoView({behavior:'smooth'})});$('categoryGrid').appendChild(b);const o=document.createElement('option');o.value=c.title;o.textContent=c.title;$('filterCategory').appendChild(o)})}
-function selectRegion(region){activeRegion=region;document.querySelectorAll('.region-btn').forEach(b=>b.classList.toggle('active',b.dataset.region===region));$('filterRegion').value=region;$('countrySelect').value='';selectedCountry='';$('countryInfo').classList.remove('show');if(globeInstance){const coords={'Africa':[1,20],'Europe':[52,15],'Asia':[28,90],'North America':[40,-100],'Latin America & Caribbean':[-15,-60],'Oceania':[-23,145]};const p=coords[region];if(p)globeInstance.pointOfView({lat:p[0],lng:p[1],altitude:1.65},900)}renderResults();}
-function selectCountry(name,fromGlobe=false){if(!name)return;selectedCountry=name;const region=regionOf(name);activeRegion=region;document.querySelectorAll('.region-btn').forEach(b=>b.classList.toggle('active',b.dataset.region===region));$('countrySelect').value=allCountries.some(c=>c.name===name)?name:'';$('countryName').textContent=name;$('countryDesc').textContent=`Explore art, creative communities, cultural heritage, institutions and opportunities connected with ${name}. Directory results will appear when relevant records are available.`;$('countryInfo').classList.add('show');if(region)$('filterRegion').value=region;$('filterSearch').value='';renderResults();if(!fromGlobe)$('countryInfo').scrollIntoView({behavior:'smooth',block:'nearest'});if(globeInstance){const feature=window.__waaFeatures?.find(f=>(f.properties?.ADMIN||f.properties?.name||'').toLowerCase()===name.toLowerCase());if(feature){const b=feature.properties;const lat=Number(b.LABEL_Y||b.label_y||0),lng=Number(b.LABEL_X||b.label_x||0);if(lat||lng)globeInstance.pointOfView({lat,lng,altitude:1.45},900)}}}
-function recordMatches(r,q){const hay=[r.title,r.type,r.country,r.region,r.city,r.category,r.description,(r.tags||[]).join(' '),r.source].join(' ').toLowerCase();return !q||hay.includes(q.toLowerCase())}
-function renderResults(){const q=$('filterSearch').value.trim();const reg=$('filterRegion').value;const cat=$('filterCategory').value;const typ=$('filterType').value;const list=records.filter(r=>(!reg||r.region===reg||r.region==='Global')&&(!cat||r.category===cat)&&(!typ||r.type===typ)&&recordMatches(r,q));$('resultCount').textContent=`${list.length} ${list.length===1?'resource':'resources'} found · ${records.length} in this browser's directory`;const box=$('results');box.innerHTML='';if(!list.length){box.innerHTML='<div class="empty"><strong>No matching directory entries yet.</strong><br>Try a different keyword or remove a filter. The country index covers the world, but art listings are added as WAA researches and verifies them.<br><br><button class="smallbtn" id="emptyAdd">＋ Add a resource</button></div>';const a=$('emptyAdd');if(a)a.onclick=openModal;return}list.forEach(r=>{const card=document.createElement('article');card.className='result';const verified=r.verified==='verified'?'WAA verified':'Verification pending';card.innerHTML=`<div class="tag">${esc(r.type)} · ${esc(r.category||'Uncategorised')}</div><h3>${esc(r.title)}</h3><p>${esc(r.description)}</p><div class="result-foot"><span>${esc([r.city,r.country].filter(Boolean).join(', '))}</span><span>${esc(verified)}</span></div><div class="result-foot"><span>${esc(r.source||'Source not specified')}</span><a href="${esc(safeURL(r.url))}" target="_blank" rel="noopener noreferrer">Visit source ↗</a></div>`;box.appendChild(card)})}
-function runSearch(){const q=$('globalSearch').value.trim();$('filterSearch').value=q;activeCategory='';$('filterCategory').value='';document.querySelectorAll('.category').forEach(b=>b.classList.remove('active'));if(allCountries.some(c=>c.name.toLowerCase()===q.toLowerCase()))selectCountry(allCountries.find(c=>c.name.toLowerCase()===q.toLowerCase()).name);else renderResults();$('directory').scrollIntoView({behavior:'smooth'})}
-function openModal(){$('entryModal').classList.add('show');$('entryTitle').focus()}function closeModal(){$('entryModal').classList.remove('show');$('entryForm').reset()}
-$('entryForm').addEventListener('submit',e=>{e.preventDefault();const country=$('entryCountry').value;const url=$('entrySource').value.trim();if(!/^https?:\/\//i.test(url)){notify('Please enter a complete website URL beginning with https:// or http://');return}const item={id:'waa-'+Date.now(),title:$('entryTitle').value.trim(),type:$('entryType').value,country,region:regionOf(country)||'Global',city:$('entryCity').value.trim(),category:$('entryCategory').value,description:$('entryDescription').value.trim(),url,tags:$('entryTags').value.split(',').map(s=>s.trim()).filter(Boolean),verified:'unverified',source:'User-submitted; review before publication',updated:new Date().toISOString().slice(0,10)};records.unshift(item);try{saveRecords();closeModal();renderResults();notify('Resource saved in this browser. Export the JSON to back it up.')}catch(err){records.shift();notify('Could not save. Browser storage may be full or disabled.')}});
-function exportJSON(){const payload={schema:'waa-global-art-explorer',version:1,exportedAt:new Date().toISOString(),records};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='waa-global-art-explorer-database.json';a.click();URL.revokeObjectURL(a.href);notify('Directory JSON export prepared.')}
-function importJSON(file){const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);const incoming=Array.isArray(parsed)?parsed:parsed.records;if(!Array.isArray(incoming))throw Error('Invalid records');const valid=incoming.filter(r=>r&&typeof r.title==='string'&&typeof r.url==='string'&&/^https?:\/\//i.test(r.url)&&typeof r.country==='string'&&typeof r.description==='string');if(!valid.length)throw Error('No valid resource records found');const map=new Map(records.map(r=>[r.id,r]));valid.forEach((r,i)=>{const normalized={...r,id:r.id||'import-'+Date.now()+'-'+i,region:r.region||regionOf(r.country)||'Global',tags:Array.isArray(r.tags)?r.tags:[],verified:r.verified==='verified'?'verified':'unverified'};map.set(normalized.id,normalized)});records=[...map.values()];saveRecords();renderResults();notify(`${valid.length} records imported. Review verification status before relying on them.`)}catch(err){notify('Import failed: please choose a valid WAA Explorer JSON export.')}};reader.readAsText(file)}
-$('searchBtn').addEventListener('click',runSearch);$('globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter')runSearch()});document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{$('globalSearch').value=b.dataset.query;runSearch()}));$('countrySelect').addEventListener('change',e=>selectCountry(e.target.value));$('countrySearch').addEventListener('click',()=>{if(selectedCountry){$('filterSearch').value=selectedCountry;renderResults();$('directory').scrollIntoView({behavior:'smooth'})}});$('clearCountry').addEventListener('click',()=>{$('countryInfo').classList.remove('show');$('countrySelect').value='';selectedCountry='';$('filterRegion').value='';activeRegion='';document.querySelectorAll('.region-btn').forEach(b=>b.classList.remove('active'));renderResults()});['filterSearch','filterRegion','filterCategory','filterType'].forEach(id=>$(id).addEventListener('input',renderResults));$('resetFilters').addEventListener('click',()=>{$('filterSearch').value='';$('filterRegion').value='';$('filterCategory').value='';$('filterType').value='';activeCategory='';document.querySelectorAll('.category').forEach(b=>b.classList.remove('active'));renderResults()});$('addEntry').addEventListener('click',openModal);$('cancelEntry').addEventListener('click',closeModal);$('entryModal').addEventListener('click',e=>{if(e.target===$('entryModal'))closeModal()});$('exportData').addEventListener('click',exportJSON);$('importData').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',e=>{if(e.target.files[0])importJSON(e.target.files[0]);e.target.value=''});
-function init(){loadRecords();buildRegions();buildCountries();buildCategories();renderResults();$('resultCount').textContent=`${records.length} starter resources · ${allCountries.length} country navigation entries`;}
+
+const STORE='waa_global_art_explorer_records_v1';
+
+let records=[];
+let activeRegion='';
+let activeCategory='';
+let selectedCountry='';
+let countryFilter='';
+let publishedIds=new Set();
+let publishedCount=0;
+let globeInstance=null;
+
+const $=id=>document.getElementById(id);
+
+const safeURL=u=>{
+  try{
+    const x=new URL(String(u||''),location.href);
+    return ['http:','https:'].includes(x.protocol)?x.href:'#';
+  }catch(e){return '#'}
+};
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+
+function notify(msg){
+  const el=$('status');
+  el.textContent=msg;
+  el.classList.add('show');
+  clearTimeout(notify.timer);
+  notify.timer=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+function regionOf(country){
+  return allCountries.find(c=>c.name.toLowerCase()===String(country).toLowerCase())?.region||'';
+}
+
+function loadRecords(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(STORE)||'null');
+    records=Array.isArray(saved)?saved:BASE_RECORDS.slice();
+  }catch(e){
+    records=BASE_RECORDS.slice();
+  }
+}
+
+function saveRecords(){
+  localStorage.setItem(STORE,JSON.stringify(records));
+}
+
+/* Load WAA's shared, published JSON directory */
+async function loadPublishedRecords(){
+  try{
+    const response=await fetch('./data/records.json',{cache:'no-store'});
+
+    if(!response.ok){
+      throw new Error('Published database unavailable');
+    }
+
+    const data=await response.json();
+
+    if(!Array.isArray(data.records)){
+      throw new Error('Invalid database');
+    }
+
+    const published=data.records.filter(r=>r&&r.id&&r.title);
+
+    publishedIds=new Set(published.map(r=>r.id));
+    publishedCount=published.length;
+
+    const merged=new Map();
+
+    /* Published records take priority */
+    published.forEach(r=>merged.set(r.id,r));
+
+    /* Retain local records that are not in the published database */
+    records.forEach((r,i)=>{
+      if(r&&r.id&&!publishedIds.has(r.id)){
+        merged.set(r.id,r);
+      }else if(r&&!r.id){
+        merged.set('local-'+i,r);
+      }
+    });
+
+    records=[...merged.values()];
+    renderResults();
+
+  }catch(error){
+    console.warn('WAA published directory could not load:',error);
+    renderResults();
+    notify('Published directory could not load. Showing available local records.');
+  }
+}
+
+function buildRegions(){
+  const box=$('regionButtons');
+
+  REGIONS.forEach(r=>{
+    const b=document.createElement('button');
+    b.className='region-btn';
+    b.textContent=r;
+    b.dataset.region=r;
+    b.addEventListener('click',()=>selectRegion(r));
+    box.appendChild(b);
+  });
+
+  REGIONS.forEach(r=>{
+    const o=document.createElement('option');
+    o.value=r;
+    o.textContent=r;
+    $('filterRegion').appendChild(o);
+  });
+}
+
+function buildCountries(){
+  allCountries.sort((a,b)=>a.name.localeCompare(b.name));
+
+  const selects=[$('countrySelect'),$('entryCountry')];
+
+  selects.forEach(sel=>{
+    const groups={};
+    REGIONS.forEach(r=>groups[r]=[]);
+
+    allCountries.forEach(c=>groups[c.region].push(c.name));
+
+    REGIONS.forEach(r=>{
+      const og=document.createElement('optgroup');
+      og.label=r;
+
+      groups[r].forEach(n=>{
+        const o=document.createElement('option');
+        o.value=n;
+        o.textContent=n;
+        og.appendChild(o);
+      });
+
+      sel.appendChild(og);
+    });
+  });
+
+  $('filterRegion').value='';
+}
+
+function buildCategories(){
+  CATEGORIES.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='category';
+
+    b.innerHTML=`
+      <span class="ico">${c.icon}</span>
+      <strong>${esc(c.title)}</strong>
+      <small>${esc(c.desc)}</small>
+    `;
+
+    b.addEventListener('click',()=>{
+      activeCategory=activeCategory===c.title?'':c.title;
+
+      document.querySelectorAll('.category').forEach((x,i)=>{
+        x.classList.toggle('active',CATEGORIES[i].title===activeCategory);
+      });
+
+      $('filterCategory').value=activeCategory;
+      renderResults();
+      $('directory').scrollIntoView({behavior:'smooth'});
+    });
+
+    $('categoryGrid').appendChild(b);
+
+    const o=document.createElement('option');
+    o.value=c.title;
+    o.textContent=c.title;
+    $('filterCategory').appendChild(o);
+  });
+}
+
+function selectRegion(region){
+  activeRegion=region;
+  countryFilter='';
+  selectedCountry='';
+
+  document.querySelectorAll('.region-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.region===region);
+  });
+
+  $('filterRegion').value=region;
+  $('countrySelect').value='';
+  $('countryInfo').classList.remove('show');
+
+  if(globeInstance){
+    const coords={
+      'Africa':[1,20],
+      'Europe':[52,15],
+      'Asia':[28,90],
+      'North America':[40,-100],
+      'Latin America & Caribbean':[-15,-60],
+      'Oceania':[-23,145]
+    };
+
+    const p=coords[region];
+
+    if(p){
+      globeInstance.pointOfView({lat:p[0],lng:p[1],altitude:1.65},900);
+    }
+  }
+
+  renderResults();
+}
+
+function selectCountry(name,fromGlobe=false){
+  if(!name)return;
+
+  selectedCountry=name;
+  countryFilter=name;
+
+  const region=regionOf(name);
+  activeRegion=region;
+
+  document.querySelectorAll('.region-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.region===region);
+  });
+
+  $('countrySelect').value=allCountries.some(c=>c.name===name)?name:'';
+  $('countryName').textContent=name;
+
+  $('countryDesc').textContent=
+    `Explore art, creative communities, cultural heritage, institutions and opportunities connected with ${name}. Directory results will appear when relevant records are available.`;
+
+  $('countryInfo').classList.add('show');
+
+  if(region){
+    $('filterRegion').value=region;
+  }
+
+  $('filterSearch').value='';
+  renderResults();
+
+  if(!fromGlobe){
+    $('countryInfo').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+
+  if(globeInstance){
+    const feature=window.__waaFeatures?.find(f=>
+      (f.properties?.ADMIN||f.properties?.name||'').toLowerCase()===name.toLowerCase()
+    );
+
+    if(feature){
+      const b=feature.properties;
+      const lat=Number(b.LABEL_Y||b.label_y||0);
+      const lng=Number(b.LABEL_X||b.label_x||0);
+
+      if(lat||lng){
+        globeInstance.pointOfView({lat,lng,altitude:1.45},900);
+      }
+    }
+  }
+}
+
+function recordMatches(r,q){
+  const hay=[
+    r.title,r.type,r.country,r.region,r.city,r.category,
+    r.description,(r.tags||[]).join(' '),r.source
+  ].join(' ').toLowerCase();
+
+  return !q||hay.includes(q.toLowerCase());
+}
+
+/* Render directory results with country and region filters */
+function renderResults(){
+  const q=$('filterSearch').value.trim();
+  const reg=$('filterRegion').value;
+  const cat=$('filterCategory').value;
+  const typ=$('filterType').value;
+
+  const list=records.filter(r=>
+    (!countryFilter||
+      String(r.country||'').toLowerCase()===countryFilter.toLowerCase())&&
+    (!reg||r.region===reg||r.region==='Global')&&
+    (!cat||r.category===cat)&&
+    (!typ||r.type===typ)&&
+    recordMatches(r,q)
+  );
+
+  const localCount=records.filter(r=>!publishedIds.has(r.id)).length;
+
+  $('resultCount').textContent=
+    `${list.length} ${list.length===1?'resource':'resources'} found · ${publishedCount} published · ${localCount} local`;
+
+  const box=$('results');
+  box.innerHTML='';
+
+  if(!list.length){
+    box.innerHTML=`
+      <div class="empty">
+        <strong>No matching directory entries yet.</strong><br>
+        There are currently no matching records for this selection.
+        WAA can expand this country directory as resources are researched and verified.
+        <br><br>
+        <button class="smallbtn" id="emptyAdd">＋ Add a resource</button>
+      </div>
+    `;
+
+    const a=$('emptyAdd');
+    if(a)a.onclick=openModal;
+    return;
+  }
+
+  list.forEach(r=>{
+    const card=document.createElement('article');
+    card.className='result';
+
+    const verified=r.verified==='verified'?'WAA verified':'Verification pending';
+    const origin=publishedIds.has(r.id)?'WAA published':'Local entry';
+
+    card.innerHTML=`
+      <div class="tag">${esc(r.type)} · ${esc(r.category||'Uncategorised')}</div>
+      <h3>${esc(r.title)}</h3>
+      <p>${esc(r.description)}</p>
+      <div class="result-foot">
+        <span>${esc([r.city,r.country].filter(Boolean).join(', '))}</span>
+        <span>${esc(verified)}</span>
+      </div>
+      <div class="result-foot">
+        <span>${esc(origin)} · ${esc(r.source||'Source not specified')}</span>
+        <a href="${esc(safeURL(r.url))}" target="_blank" rel="noopener noreferrer">Visit source ↗</a>
+      </div>
+    `;
+
+    box.appendChild(card);
+  });
+}
+
+/* Global search */
+function runSearch(){
+  const q=$('globalSearch').value.trim();
+
+  countryFilter='';
+  selectedCountry='';
+  $('countryInfo').classList.remove('show');
+  $('countrySelect').value='';
+
+  $('filterSearch').value=q;
+  activeCategory='';
+  $('filterCategory').value='';
+
+  document.querySelectorAll('.category').forEach(b=>b.classList.remove('active'));
+
+  const country=allCountries.find(c=>c.name.toLowerCase()===q.toLowerCase());
+
+  if(country){
+    selectCountry(country.name);
+  }else{
+    renderResults();
+  }
+
+  $('directory').scrollIntoView({behavior:'smooth'});
+}
+
+function openModal(){
+  $('entryModal').classList.add('show');
+  $('entryTitle').focus();
+}
+
+function closeModal(){
+  $('entryModal').classList.remove('show');
+  $('entryForm').reset();
+}
+
+/* Add a local directory entry */
+$('entryForm').addEventListener('submit',e=>{
+  e.preventDefault();
+
+  const country=$('entryCountry').value;
+  const url=$('entrySource').value.trim();
+
+  if(!/^https?:\/\//i.test(url)){
+    notify('Please enter a complete website URL beginning with https:// or http://');
+    return;
+  }
+
+  const item={
+    id:'waa-'+Date.now(),
+    title:$('entryTitle').value.trim(),
+    type:$('entryType').value,
+    country,
+    region:regionOf(country)||'Global',
+    city:$('entryCity').value.trim(),
+    category:$('entryCategory').value,
+    description:$('entryDescription').value.trim(),
+    url,
+    tags:$('entryTags').value.split(',').map(s=>s.trim()).filter(Boolean),
+    verified:'unverified',
+    source:'User-submitted; review before publication',
+    updated:new Date().toISOString().slice(0,10)
+  };
+
+  records.unshift(item);
+
+  try{
+    saveRecords();
+    closeModal();
+    renderResults();
+    notify('Resource saved in this browser. Export the JSON to back it up.');
+  }catch(err){
+    records.shift();
+    notify('Could not save. Browser storage may be full or disabled.');
+  }
+});
+
+/* Export directory data */
+function exportJSON(){
+  const payload={
+    schema:'waa-global-art-explorer',
+    version:1,
+    exportedAt:new Date().toISOString(),
+    records
+  };
+
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+
+  a.href=URL.createObjectURL(blob);
+  a.download='waa-global-art-explorer-database.json';
+  a.click();
+
+  URL.revokeObjectURL(a.href);
+  notify('Directory JSON export prepared.');
+}
+
+/* Import directory data */
+function importJSON(file){
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+    try{
+      const parsed=JSON.parse(reader.result);
+      const incoming=Array.isArray(parsed)?parsed:parsed.records;
+
+      if(!Array.isArray(incoming)){
+        throw Error('Invalid records');
+      }
+
+      const valid=incoming.filter(r=>
+        r&&
+        typeof r.title==='string'&&
+        typeof r.url==='string'&&
+        /^https?:\/\//i.test(r.url)&&
+        typeof r.country==='string'&&
+        typeof r.description==='string'
+      );
+
+      if(!valid.length){
+        throw Error('No valid resource records found');
+      }
+
+      const map=new Map(records.map(r=>[r.id,r]));
+
+      valid.forEach((r,i)=>{
+        const normalized={
+          ...r,
+          id:r.id||'import-'+Date.now()+'-'+i,
+          region:r.region||regionOf(r.country)||'Global',
+          tags:Array.isArray(r.tags)?r.tags:[],
+          verified:r.verified==='verified'?'verified':'unverified'
+        };
+
+        map.set(normalized.id,normalized);
+      });
+
+      records=[...map.values()];
+      saveRecords();
+      renderResults();
+
+      notify(`${valid.length} records imported. Review verification status before relying on them.`);
+
+    }catch(err){
+      notify('Import failed: please choose a valid WAA Explorer JSON export.');
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+/* Event listeners */
+$('searchBtn').addEventListener('click',runSearch);
+
+$('globalSearch').addEventListener('keydown',e=>{
+  if(e.key==='Enter')runSearch();
+});
+
+document.querySelectorAll('.chip').forEach(b=>{
+  b.addEventListener('click',()=>{
+    $('globalSearch').value=b.dataset.query;
+    runSearch();
+  });
+});
+
+$('countrySelect').addEventListener('change',e=>{
+  selectCountry(e.target.value);
+});
+
+$('countrySearch').addEventListener('click',()=>{
+  if(selectedCountry){
+    countryFilter=selectedCountry;
+    $('filterSearch').value='';
+    renderResults();
+    $('directory').scrollIntoView({behavior:'smooth'});
+  }
+});
+
+$('clearCountry').addEventListener('click',()=>{
+  $('countryInfo').classList.remove('show');
+  $('countrySelect').value='';
+  selectedCountry='';
+  countryFilter='';
+  $('filterRegion').value='';
+  activeRegion='';
+
+  document.querySelectorAll('.region-btn').forEach(b=>b.classList.remove('active'));
+
+  renderResults();
+});
+
+/* Changing the directory region manually clears a previous country selection */
+$('filterRegion').addEventListener('change',()=>{
+  countryFilter='';
+  selectedCountry='';
+  $('countrySelect').value='';
+  $('countryInfo').classList.remove('show');
+  renderResults();
+});
+
+['filterSearch','filterCategory','filterType'].forEach(id=>{
+  $(id).addEventListener('input',renderResults);
+});
+
+$('resetFilters').addEventListener('click',()=>{
+  $('filterSearch').value='';
+  $('filterRegion').value='';
+  $('filterCategory').value='';
+  $('filterType').value='';
+
+  countryFilter='';
+  selectedCountry='';
+  activeRegion='';
+  activeCategory='';
+
+  $('countryInfo').classList.remove('show');
+  $('countrySelect').value='';
+
+  document.querySelectorAll('.region-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.category').forEach(b=>b.classList.remove('active'));
+
+  renderResults();
+});
+
+$('addEntry').addEventListener('click',openModal);
+$('cancelEntry').addEventListener('click',closeModal);
+
+$('entryModal').addEventListener('click',e=>{
+  if(e.target===$('entryModal'))closeModal();
+});
+
+$('exportData').addEventListener('click',exportJSON);
+$('importData').addEventListener('click',()=>$('importFile').click());
+
+$('importFile').addEventListener('change',e=>{
+  if(e.target.files[0])importJSON(e.target.files[0]);
+  e.target.value='';
+});
+
+/* Initialise the Explorer and load the published database */
+function init(){
+  loadRecords();
+  buildRegions();
+  buildCountries();
+  buildCategories();
+  renderResults();
+
+  $('resultCount').textContent=
+    `${records.length} available resources · ${allCountries.length} country navigation entries`;
+
+  loadPublishedRecords();
+}
+
 init();
-// Optional interactive globe. If a CDN is blocked, country and continent navigation still work.
-const globeScript=document.createElement('script');globeScript.src='https://unpkg.com/globe.gl';globeScript.onload=()=>{if(typeof Globe==='undefined')return;try{const el=$('globe');globeInstance=Globe()(el).globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg').bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png').backgroundColor('rgba(0,0,0,0)').showAtmosphere(true).atmosphereColor('#58bdb5').atmosphereAltitude(.17);globeInstance.controls().autoRotate=true;globeInstance.controls().autoRotateSpeed=.35;globeInstance.controls().enableZoom=true;globeInstance.pointOfView({lat:18,lng:5,altitude:2.25});globeInstance.width(el.clientWidth).height(el.clientHeight);window.addEventListener('resize',()=>{if(globeInstance)globeInstance.width(el.clientWidth).height(el.clientHeight)});fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson').then(r=>{if(!r.ok)throw Error('Map data unavailable');return r.json()}).then(data=>{window.__waaFeatures=data.features||[];globeInstance.polygonsData(data.features).polygonAltitude(.008).polygonCapColor(f=>{const n=f.properties?.ADMIN||'';return selectedCountry&&n.toLowerCase()===selectedCountry.toLowerCase()?'#d7b978':'rgba(29,121,121,0.23)'}).polygonSideColor(()=> 'rgba(70,160,150,0.12)').polygonStrokeColor(()=> 'rgba(156,203,196,0.55)').onPolygonClick(f=>{const name=f.properties?.ADMIN||f.properties?.name;if(name){const match=allCountries.find(c=>c.name.toLowerCase()===name.toLowerCase())||allCountries.find(c=>c.name.toLowerCase().includes(name.toLowerCase())||name.toLowerCase().includes(c.name.toLowerCase()));if(match)selectCountry(match.name,true);else{selectedCountry=name;$('countryName').textContent=name;$('countryDesc').textContent='This territory is visible on the map. Its art directory can be expanded as resources are researched.';$('countryInfo').classList.add('show')}}}).onPolygonHover(f=>{el.style.cursor=f?'pointer':'grab'});$('globeFallback').classList.add('hide');}).catch(()=>{$('globeFallback').querySelector('p').textContent='The map boundary service could not be reached. Use the country selector and continent buttons to explore.'})}catch(e){$('globeFallback').querySelector('p').textContent='The globe could not start in this browser. Country and continent navigation remain available.'}};globeScript.onerror=()=>{$('globeFallback').querySelector('p').textContent='The globe library could not load. Country and continent navigation remain available.'};document.head.appendChild(globeScript);
+
+/* Optional interactive globe */
+const globeScript=document.createElement('script');
+globeScript.src='https://unpkg.com/globe.gl';
+
+globeScript.onload=()=>{
+  if(typeof Globe==='undefined')return;
+
+  try{
+    const el=$('globe');
+
+    globeInstance=Globe()(el)
+      .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+      .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundColor('rgba(0,0,0,0)')
+      .showAtmosphere(true)
+      .atmosphereColor('#58bdb5')
+      .atmosphereAltitude(.17);
+
+    globeInstance.controls().autoRotate=true;
+    globeInstance.controls().autoRotateSpeed=.35;
+    globeInstance.controls().enableZoom=true;
+
+    globeInstance.pointOfView({lat:18,lng:5,altitude:2.25});
+
+    globeInstance.width(el.clientWidth).height(el.clientHeight);
+
+    window.addEventListener('resize',()=>{
+      if(globeInstance){
+        globeInstance.width(el.clientWidth).height(el.clientHeight);
+      }
+    });
+
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+      .then(r=>{
+        if(!r.ok)throw Error('Map data unavailable');
+        return r.json();
+      })
+      .then(data=>{
+        window.__waaFeatures=data.features||[];
+
+        globeInstance
+          .polygonsData(data.features)
+          .polygonAltitude(.008)
+          .polygonCapColor(f=>{
+            const n=f.properties?.ADMIN||'';
+            return selectedCountry&&n.toLowerCase()===selectedCountry.toLowerCase()
+              ?'#d7b978'
+              :'rgba(29,121,121,0.23)';
+          })
+          .polygonSideColor(()=>'rgba(70,160,150,0.12)')
+          .polygonStrokeColor(()=>'rgba(156,203,196,0.55)')
+          .onPolygonClick(f=>{
+            const name=f.properties?.ADMIN||f.properties?.name;
+
+            if(name){
+              const match=
+                allCountries.find(c=>c.name.toLowerCase()===name.toLowerCase())||
+                allCountries.find(c=>
+                  c.name.toLowerCase().includes(name.toLowerCase())||
+                  name.toLowerCase().includes(c.name.toLowerCase())
+                );
+
+              if(match){
+                selectCountry(match.name,true);
+              }else{
+                selectedCountry=name;
+                countryFilter=name;
+                $('countryName').textContent=name;
+                $('countryDesc').textContent=
+                  'This territory is visible on the map. Its art directory can be expanded as resources are researched.';
+                $('countryInfo').classList.add('show');
+                renderResults();
+              }
+            }
+          })
+          .onPolygonHover(f=>{
+            el.style.cursor=f?'pointer':'grab';
+          });
+
+        $('globeFallback').classList.add('hide');
+
+      })
+      .catch(()=>{
+        $('globeFallback').querySelector('p').textContent=
+          'The map boundary service could not be reached. Use the country selector and continent buttons to explore.';
+      });
+
+  }catch(e){
+    $('globeFallback').querySelector('p').textContent=
+      'The globe could not start in this browser. Country and continent navigation remain available.';
+  }
+};
+
+globeScript.onerror=()=>{
+  $('globeFallback').querySelector('p').textContent=
+    'The globe library could not load. Country and continent navigation remain available.';
+};
+
+document.head.appendChild(globeScript);
+
 })();
 </script>
+
 </body></html>
