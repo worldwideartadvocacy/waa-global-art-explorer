@@ -1,0 +1,53 @@
+
+{
+  "schema": "waa-global-art-explorer",
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-10",
+  "records": [
+    {
+      "id": "waa-global-art-hub",
+      "title": "WAA Global Art Hub",
+      "type": "WAA resource",
+      "country": "Global",
+      "region": "Global",
+      "city": "Online",
+      "category": "Cultures & Art Heritage",
+      "description": "Worldwide Art Advocacy's gateway to global art promotion, artist development, cultural research and creative collaboration.",
+      "url": "https://worldwideartadvocacy.org/global-art-hub/",
+      "tags": ["WAA", "global art", "artist development", "culture"],
+      "verified": "verified",
+      "source": "Worldwide Art Advocacy",
+      "updated": "2026-11-10"
+    },
+    {
+      "id": "waa-home",
+      "title": "Worldwide Art Advocacy",
+      "type": "WAA resource",
+      "country": "Global",
+      "region": "Global",
+      "city": "Online",
+      "category": "Art Business & Professional Services",
+      "description": "An international art advocacy platform promoting artists, preserving culture and connecting creative communities.",
+      "url": "https://worldwideartadvocacy.org/",
+      "tags": ["WAA", "art advocacy", "artists", "culture"],
+      "verified": "verified",
+      "source": "Worldwide Art Advocacy",
+      "updated": "2026-11-10"
+    },
+    {
+      "id": "waa-open-calls",
+      "title": "Global Artist Open Calls & Competitions",
+      "type": "WAA resource",
+      "country": "Global",
+      "region": "Global",
+      "city": "Online",
+      "category": "Opportunities & Development",
+      "description": "WAA's open-call and competition resource gateway. Individual listings require checking against their original organisers.",
+      "url": "https://worldwideartadvocacy.org/global-artist-open-calls-competitions/",
+      "tags": ["open calls", "competitions", "opportunities", "WAA"],
+      "verified": "unverified",
+      "source": "WAA page reference; individual listings require checking",
+      "updated": "2026-11-10"
+    }
+  ]
+}
