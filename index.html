@@ -62,7 +62,7 @@ border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow
 .globe-fallback .earth{font-size:100px;filter:drop-shadow(0 0 30px #43aaa080)}
 .globe-tip{position:absolute;bottom:13px;left:0;right:0;text-align:center;color:#9ab6b1;font-size:10px;pointer-events:none}
 
-/* High-contrast country label on the globe */
+/* High-contrast selected country label */
 .globe-country-label{
 display:inline-block;
 background:#061519;
@@ -75,7 +75,7 @@ font-size:13px;
 font-weight:800;
 letter-spacing:.6px;
 white-space:nowrap;
-box-shadow:0 4px 18px #000d;
+box-shadow:0 4px 18px #000d,0 0 15px #d7b97855;
 text-shadow:none;
 pointer-events:none;
 }
@@ -88,10 +88,72 @@ pointer-events:none;
 .region-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
 .region-btn{background:#10373b;border:1px solid #376766;color:#e5f0ed;border-radius:10px;padding:10px 8px;font-size:11px}
 .region-btn.active,.region-btn:hover,.chip:hover{background:#1d7979;border-color:#79b7ae}
-.country-info{border-top:1px solid var(--line);padding-top:13px;display:none}
+
+.country-info{
+border-top:1px solid var(--line);
+padding-top:15px;
+display:none;
+}
 .country-info.show{display:block}
-.country-info h4{font:22px Georgia,serif;margin:0 0 5px}
-.country-info p{font-size:12px}
+.country-info h4{font:27px Georgia,serif;margin:10px 0 12px;color:#fff}
+.country-profile-top{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+flex-wrap:wrap
+}
+.country-selected-badge{
+background:#d7b978;
+color:#172b29;
+border-radius:20px;
+padding:5px 9px;
+font-size:9px;
+font-weight:800;
+letter-spacing:1px
+}
+.country-region-line{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+padding:11px 12px;
+background:#10373b;
+border:1px solid #376766;
+border-radius:9px;
+font-size:11px;
+margin-bottom:5px
+}
+.country-region-line span{color:var(--muted)}
+.country-region-line strong{color:#f0d28e;text-align:right}
+.profile-block{
+padding:13px 0;
+border-bottom:1px solid #285457
+}
+.profile-heading{
+color:#9ccbc4;
+font-size:10px;
+font-weight:800;
+letter-spacing:1.2px;
+text-transform:uppercase;
+margin-bottom:9px
+}
+.profile-content{
+color:#d5e4df;
+font-size:12px;
+line-height:1.7
+}
+.profile-content ul{margin:0;padding-left:18px}
+.profile-content li{margin:0 0 8px}
+.profile-source-note{
+margin-top:12px;
+padding:11px;
+border-left:3px solid var(--gold);
+background:#102d30;
+color:#b4c7c4;
+font-size:10px;
+line-height:1.65
+}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
 .smallbtn{border:1px solid var(--line);background:#10373b;color:#e7f1ed;border-radius:9px;padding:9px 11px;font-size:11px}
 .smallbtn:hover{background:#1d7979}
@@ -278,16 +340,37 @@ header{padding:17px 0}
 <option value="">Choose a country or territory</option>
 </select>
 </div>
+
 <div class="country-info" id="countryInfo">
-<div class="fieldlabel">Selected destination</div>
-<h4 id="countryName">Explore a country</h4>
-<p id="countryDesc">Select a country to explore its art ecosystem.</p>
-<div class="toolbar">
-<button class="smallbtn" id="countrySearch">Explore this country</button>
-<button class="smallbtn" id="clearCountry">Clear</button>
+  <div class="country-profile-top">
+    <div class="fieldlabel">COUNTRY ART & CULTURAL PROFILE</div>
+    <span class="country-selected-badge">SELECTED</span>
+  </div>
+  <h4 id="countryName">Explore a country</h4>
+  <div class="country-region-line">
+    <span>Region</span>
+    <strong id="countryRegion">Not selected</strong>
+  </div>
+  <div class="profile-block">
+    <div class="profile-heading">Notable art forms</div>
+    <div id="countryArtForms" class="profile-content">
+      Select a country to explore its artistic traditions.
+    </div>
+  </div>
+  <div class="profile-block">
+    <div class="profile-heading">Cultural traditions & heritage</div>
+    <div id="countryTraditions" class="profile-content">
+      Country-specific cultural information will appear here.
+    </div>
+  </div>
+  <div class="profile-source-note" id="countryProfileNote"></div>
+  <div class="toolbar" style="margin-top:13px">
+    <button class="smallbtn" id="countrySearch">Explore directory entries</button>
+    <button class="smallbtn" id="clearCountry">Clear selection</button>
+  </div>
 </div>
-</div>
-<p class="note">Country boundaries and labels are provided by Natural Earth geographic data. The Explorer's art listings are a separate curated directory.</p>
+
+<p class="note">Country boundaries and labels are provided by Natural Earth geographic data. Country profiles are curated separately. Regional introductions are clearly distinguished from country-specific information.</p>
 </aside>
 </div>
 </section>
@@ -303,7 +386,6 @@ header{padding:17px 0}
 <div class="category-grid" id="categoryGrid"></div>
 </section>
 
-<!-- WAA RESOURCE NAVIGATION -->
 <section class="section" id="waa-resources">
 <div class="section-head">
 <div>
@@ -576,6 +658,242 @@ const COUNTRY_ALIASES={
 'kyrgyz republic':'Kyrgyzstan'
 };
 
+/*
+Country-specific profiles.
+These are selected examples, not exhaustive inventories.
+A profile is only displayed as country-specific when its country
+has an entry here. Other countries receive clearly labelled
+regional context instead.
+*/
+const COUNTRY_PROFILES={
+
+"Nigeria":{
+artForms:[
+"Benin bronze and brass casting, associated with the historic Benin Kingdom.",
+"Ife naturalistic terracotta and copper-alloy sculpture.",
+"Yoruba wood carving, gelede masks and carved doors.",
+"Igbo uli-inspired body and wall designs, and masquerade arts.",
+"Aso-oke weaving, adire resist-dyed textiles and Nigerian pottery traditions."
+],
+traditions:[
+"The Benin Kingdom's royal court arts include commemorative heads and plaques.",
+"Yoruba artistic traditions are expressed through sculpture, textiles, festivals and sacred visual culture.",
+"Igbo masquerade traditions include carved masks and performance-based arts.",
+"Contemporary Nigerian artists work across painting, sculpture, photography, fashion and mixed media."
+],
+note:"COUNTRY-SPECIFIC PROFILE — Selected Nigerian artistic traditions. These examples are not an exhaustive account of the country's many ethnic and regional cultures."
+},
+
+"Ghana":{
+artForms:[
+"Kente weaving, particularly associated with Asante and Ewe communities.",
+"Adinkra stamped textiles and symbolic visual motifs.",
+"Akan goldweights and traditional metal casting.",
+"Wood carving, pottery, beadwork and contemporary painting."
+],
+traditions:[
+"Kente cloth carries social, ceremonial and symbolic meanings.",
+"Adinkra symbols communicate ideas, values and proverbs through visual design.",
+"Asante royal regalia and goldwork form an important part of Ghana's material heritage.",
+"Contemporary Ghanaian artists reinterpret local histories and identities."
+],
+note:"COUNTRY-SPECIFIC PROFILE — Kente and Adinkra are important examples, but Ghana's artistic heritage includes many other community-based traditions."
+},
+
+"Japan":{
+artForms:[
+"Ukiyo-e woodblock prints.",
+"Sumi-e ink painting and Japanese calligraphy.",
+"Nihonga painting and traditional screen painting.",
+"Ceramics, lacquerware, textiles, origami and woodcraft."
+],
+traditions:[
+"Ukiyo-e prints portrayed actors, landscapes, everyday life and popular culture.",
+"Japanese ceramic traditions include regionally distinctive kilns and firing methods.",
+"Brushwork, seasonal awareness and craftsmanship influence many Japanese art forms.",
+"Contemporary Japanese art includes installation, photography, manga, design and experimental media."
+],
+note:"COUNTRY-SPECIFIC PROFILE — Selected examples from Japan's varied historical and contemporary art cultures."
+},
+
+"Mexico":{
+artForms:[
+"Mexican muralism, including large-scale public and socially engaged painting.",
+"Pre-Columbian sculpture, ceramics and stone carving.",
+"Talavera pottery and other regional ceramic traditions.",
+"Textile weaving, embroidery, printmaking and folk art."
+],
+traditions:[
+"Muralism became a major public art movement in post-revolutionary Mexico.",
+"Indigenous visual cultures, including Maya and Mexica artistic legacies, remain important to Mexican heritage.",
+"Regional crafts include textiles, ceramics, woodwork and paper arts.",
+"Contemporary Mexican artists work across painting, sculpture, installation and digital media."
+],
+note:"COUNTRY-SPECIFIC PROFILE — Mexico's artistic heritage includes Indigenous, colonial, modern and contemporary histories."
+},
+
+"Australia":{
+artForms:[
+"Aboriginal Australian art traditions, including painting, carving, engraving and rock art.",
+"Torres Strait Islander visual arts, including printmaking, sculpture and distinctive cultural designs.",
+"Contemporary Indigenous painting and fibre art.",
+"Contemporary Australian painting, photography, sculpture and installation."
+],
+traditions:[
+"Aboriginal art traditions are diverse and belong to distinct First Nations communities, with particular cultural protocols and connections to Country.",
+"Dot painting is associated with some contemporary Central and Western Desert art practices; it is not a universal style for all Aboriginal peoples.",
+"Torres Strait Islander art reflects distinct island cultures, histories and relationships with sea and land.",
+"Contemporary Australian art includes Indigenous and non-Indigenous voices across many media."
+],
+note:"COUNTRY-SPECIFIC PROFILE — Aboriginal and Torres Strait Islander peoples have distinct cultures and artistic traditions; no single style represents all communities."
+},
+
+"Benin":{
+artForms:[
+"Fon and other community-based wood carving and sculpture.",
+"Appliqué textile traditions, particularly associated with the historic royal courts of Dahomey.",
+"Metalwork, pottery, beadwork and contemporary visual arts."
+],
+traditions:[
+"The historic Kingdom of Dahomey developed distinctive court arts, including elaborate appliqué textiles.",
+"Vodun-related visual culture includes objects and artistic practices with religious and community significance.",
+"Contemporary artists engage with Benin's histories, identities and changing cultural landscape."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — The Republic of Benin is distinct from the historic Kingdom of Benin, centred in present-day Nigeria."
+},
+
+"Ethiopia":{
+artForms:[
+"Ethiopian Christian icon painting and illuminated manuscripts.",
+"Church murals and religious visual arts.",
+"Traditional crosses, metalwork, weaving and basketry.",
+"Contemporary Ethiopian painting, photography and sculpture."
+],
+traditions:[
+"Ethiopian Orthodox visual culture includes distinctive iconographic traditions and manuscript illumination.",
+"Church architecture and mural painting preserve important religious and historical narratives.",
+"The country's many communities sustain varied textile, craft and decorative traditions."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Ethiopia's artistic heritage spans multiple religious, linguistic and cultural communities."
+},
+
+"Egypt":{
+artForms:[
+"Ancient Egyptian sculpture, relief carving and wall painting.",
+"Papyrus painting and manuscript arts.",
+"Islamic architectural decoration, geometric design and calligraphy.",
+"Contemporary painting, sculpture, ceramics and photography."
+],
+traditions:[
+"Ancient Egyptian visual culture is represented in temples, tombs, sculpture and painted reliefs.",
+"Coptic and Islamic artistic traditions form important parts of Egypt's later cultural history.",
+"Modern and contemporary Egyptian artists engage with social life, identity and heritage."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected ancient, religious, modern and contemporary traditions."
+},
+
+"South Africa":{
+artForms:[
+"Ndebele mural painting and geometric house decoration.",
+"Zulu beadwork and other forms of bead-based visual expression.",
+"San rock art and engraving traditions.",
+"Contemporary painting, sculpture, printmaking, photography and installation."
+],
+traditions:[
+"Ndebele decorative arts are known for distinctive geometric patterns and strong colour relationships.",
+"Beadwork traditions communicate identity, relationships and social meaning in several communities.",
+"South African contemporary art often engages with history, land, memory and social change."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected traditions among South Africa's many communities."
+},
+
+"India":{
+artForms:[
+"Madhubani, Warli and other regional painting traditions.",
+"Miniature painting traditions, including Mughal and Rajput schools.",
+"Sculpture, temple arts, textiles, embroidery and block printing.",
+"Contemporary painting, installation, photography and new media."
+],
+traditions:[
+"India's visual heritage includes varied regional, religious and courtly traditions.",
+"Textile practices such as weaving, embroidery and block printing differ across regions.",
+"Contemporary Indian artists work with inherited visual languages and international art movements."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Examples from a large and regionally diverse art history."
+},
+
+"China":{
+artForms:[
+"Chinese ink painting and calligraphy.",
+"Porcelain and other ceramic traditions.",
+"Jade carving, lacquerwork and decorative arts.",
+"Contemporary painting, sculpture, installation and digital art."
+],
+traditions:[
+"Brushwork and calligraphy have long-standing relationships in Chinese literati arts.",
+"Chinese ceramics developed distinctive forms and techniques across historical periods and kiln centres.",
+"Contemporary Chinese art engages with historical memory, urban life and global exchange."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected historical and contemporary Chinese art traditions."
+},
+
+"Indonesia":{
+artForms:[
+"Batik wax-resist textile traditions.",
+"Wayang shadow-puppet arts.",
+"Traditional wood carving, weaving and metalwork.",
+"Contemporary painting, installation and mixed-media practices."
+],
+traditions:[
+"Batik traditions vary across Indonesian regions, with important centres including Java.",
+"Wayang performance combines visual design, storytelling, music and theatre.",
+"Indonesian art reflects the country's many islands, languages and cultural communities."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Indonesia's art traditions are diverse across its archipelago."
+},
+
+"Peru":{
+artForms:[
+"Andean textile weaving and embroidery.",
+"Ceramics and metalwork with deep pre-Columbian histories.",
+"Retablo folk art and painted wooden boxes.",
+"Contemporary painting, sculpture and photography."
+],
+traditions:[
+"Andean communities sustain distinctive textile patterns and weaving knowledge.",
+"Peruvian visual heritage includes Inca and earlier cultural traditions.",
+"Retablo arts combine miniature scenes, craft and storytelling."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected Andean and wider Peruvian traditions."
+},
+
+"New Zealand":{
+artForms:[
+"Māori whakairo (carving) and tukutuku panel arts.",
+"Māori tā moko and other forms of cultural visual expression.",
+"Weaving traditions including raranga.",
+"Contemporary Māori and wider Aotearoa New Zealand art."
+],
+traditions:[
+"Māori art is connected to whakapapa, identity, community and place.",
+"Carving, weaving and tā moko have specific cultural meanings and protocols.",
+"Contemporary artists work across traditional and new media."
+],
+note:"COUNTRY-SPECIFIC STARTER PROFILE — Māori cultural knowledge and artistic practices should be represented with respect for community ownership and protocols."
+}
+
+};
+
+/* Regional context is deliberately identified as regional, not national. */
+const REGIONAL_ART_CONTEXT={
+"Africa":"African art is not one single tradition. Across the continent, artistic practices include diverse sculptural, textile, ceramic, metalworking, architectural, performance and contemporary art traditions. This is broad regional context, not a description of this country's specific heritage.",
+"Europe":"European art includes many distinct national and local histories, from ancient and medieval traditions to modern and contemporary movements. This is broad regional context, not a verified list of this country's signature traditions.",
+"Asia":"Asian art encompasses highly diverse traditions in painting, sculpture, ceramics, textiles, architecture, calligraphy and contemporary practice. This is broad regional context, not a verified list of this country's signature traditions.",
+"North America":"North American art includes diverse Indigenous, local, colonial, modern and contemporary traditions. This is broad regional context, not a verified list of this country's signature traditions.",
+"Latin America & Caribbean":"Latin American and Caribbean art includes Indigenous, African-diasporic, European-influenced and contemporary practices, varying widely between countries and communities. This is broad regional context, not a verified list of this country's signature traditions.",
+"Oceania":"Oceania includes many distinct Indigenous and contemporary artistic cultures across Australia, Aotearoa New Zealand and the Pacific Islands. This is broad regional context, not a verified list of this country's signature traditions."
+};
+
 const BASE_RECORDS=[
 {
 id:'waa-global-art-hub',
@@ -736,7 +1054,7 @@ return match&&normalizeCountryName(match.name)===normalizeCountryName(selectedCo
 });
 }
 
-/* Create a dark, gold-bordered HTML label for strong contrast */
+/* Create a high-contrast country label */
 function makeCountryLabel(d){
 const label=document.createElement('div');
 label.className='globe-country-label';
@@ -745,45 +1063,92 @@ label.setAttribute('aria-label','Selected country: '+d.name);
 return label;
 }
 
+/* Highlight selected country with gold fill, bright border and raised surface */
 function updateGlobeSelection(){
 if(!globeInstance||!globeFeatures.length)return;
 
 const feature=selectedGlobeFeature();
 
+const isSelected=f=>{
+const match=countryFromFeature(f);
+return Boolean(
+selectedCountry&&
+match&&
+normalizeCountryName(match.name)===
+normalizeCountryName(selectedCountry)
+);
+};
+
 globeInstance
-.polygonCapColor(f=>{
-const match=countryFromFeature(f);
-return selectedCountry&&match&&
-normalizeCountryName(match.name)===normalizeCountryName(selectedCountry)
-?'#d7b978':'rgba(29,121,121,0.23)';
-})
-.polygonStrokeColor(f=>{
-const match=countryFromFeature(f);
-return selectedCountry&&match&&
-normalizeCountryName(match.name)===normalizeCountryName(selectedCountry)
-?'#fff0b8':'rgba(156,203,196,0.55)';
-})
-.polygonAltitude(f=>{
-const match=countryFromFeature(f);
-return selectedCountry&&match&&
-normalizeCountryName(match.name)===normalizeCountryName(selectedCountry)
-?0.018:0.008;
-})
+.polygonCapColor(f=>
+isSelected(f)?'#d7b978':'rgba(29,121,121,0.23)'
+)
+.polygonSideColor(f=>
+isSelected(f)?'#a77c32':'rgba(70,160,150,0.12)'
+)
+.polygonStrokeColor(f=>
+isSelected(f)?'#fff4c9':'rgba(156,203,196,0.55)'
+)
+.polygonAltitude(f=>
+isSelected(f)?0.025:0.008
+)
 .htmlElementsData(feature?[{
 name:selectedCountry,
 ...getFeatureCenter(feature)
 }]:[])
 .htmlLat(d=>d.lat)
 .htmlLng(d=>d.lng)
-.htmlAltitude(0.045)
+.htmlAltitude(0.055)
 .htmlElement(makeCountryLabel)
-.htmlTransitionDuration(300);
+.htmlTransitionDuration(350);
 
 if(feature){
 const center=getFeatureCenter(feature);
 globeInstance.pointOfView({
-lat:center.lat,lng:center.lng,altitude:1.45
+lat:center.lat,
+lng:center.lng,
+altitude:1.45
 },900);
+}
+}
+
+/* Render a country-specific profile or a clearly labelled regional introduction */
+function renderCountryProfile(name,region){
+const profile=COUNTRY_PROFILES[name];
+
+$('countryName').textContent=name;
+$('countryRegion').textContent=region||'Region not classified';
+
+const artBox=$('countryArtForms');
+const traditionBox=$('countryTraditions');
+const noteBox=$('countryProfileNote');
+
+if(profile){
+artBox.innerHTML=
+'<ul>'+
+profile.artForms.map(item=>`<li>${esc(item)}</li>`).join('')+
+'</ul>';
+
+traditionBox.innerHTML=
+'<ul>'+
+profile.traditions.map(item=>`<li>${esc(item)}</li>`).join('')+
+'</ul>';
+
+noteBox.textContent=profile.note;
+noteBox.style.borderLeftColor='#d7b978';
+
+}else{
+artBox.innerHTML=
+'<p>A dedicated country-specific art profile is still being researched and prepared for this destination.</p>';
+
+traditionBox.innerHTML=
+`<p>${esc(REGIONAL_ART_CONTEXT[region]||
+'Regional art context has not yet been added. A country-specific profile is awaiting research.')}</p>`;
+
+noteBox.textContent=
+'REGIONAL CONTEXT ONLY — This is not a verified list of this country’s specific art forms or cultural traditions. A dedicated country profile will replace this introduction as research is completed.';
+
+noteBox.style.borderLeftColor='#789391';
 }
 }
 
@@ -949,13 +1314,10 @@ normalizeCountryName(c.name)===normalizeCountryName(name)
 );
 
 $('countrySelect').value=match?match.name:'';
-$('countryName').textContent=name;
 
-$('countryDesc').textContent=region
-?`${name} is in the WAA ${region} region. Explore its artists, creative communities, cultural heritage, institutions and opportunities.`
-:`Explore art, creative communities, cultural heritage, institutions and opportunities connected with ${name}. Its WAA regional classification can be added as the directory expands.`;
-
+renderCountryProfile(name,region);
 $('countryInfo').classList.add('show');
+
 $('filterRegion').value=region;
 $('filterSearch').value='';
 
@@ -1316,13 +1678,13 @@ normalizeCountryName(match.name)===normalizeCountryName(selectedCountry)
 const match=countryFromFeature(f);
 return selectedCountry&&match&&
 normalizeCountryName(match.name)===normalizeCountryName(selectedCountry)
-?'#fff0b8':'rgba(156,203,196,0.55)';
+?'#fff4c9':'rgba(156,203,196,0.55)';
 })
 .polygonAltitude(f=>{
 const match=countryFromFeature(f);
 return selectedCountry&&match&&
 normalizeCountryName(match.name)===normalizeCountryName(selectedCountry)
-?0.018:0.008;
+?0.025:0.008;
 })
 .onPolygonClick(f=>{
 const match=countryFromFeature(f);
