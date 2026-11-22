@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -945,7 +944,18 @@ updated:'2026-11-10'
 }
 ];
 
+const SUPABASE_URL='https://zainnrdvaxxgtxxrifnh.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_kxaUfGG3EtgpF1VntJUb1A_bE1KEAds';
 const STORE='waa_global_art_explorer_records_v1';
+
+const CATEGORY_ID_MAP={
+  '47420b16-0167-4693-999f-ca8631c6447d':'Galleries, Museums & Art Spaces',
+  '0efeae4b-bf64-4058-b3e2-2b34b0379447':'Galleries, Museums & Art Spaces',
+  '5617e93c-fe68-47ff-9798-0961aa3510da':'Opportunities & Development',
+  'a8dd5076-408a-4dbb-b56e-9d99001196ef':'Exhibitions & Art Events',
+  '659fbded-17c3-45c8-8077-62ea6ce6ea1b':'Education & Research',
+  'b36e3d36-6ae1-4633-9db6-42168511d04c':'Artists & Creative Professionals'
+};
 
 let records=[];
 let activeRegion='';
@@ -956,8 +966,18 @@ let publishedIds=new Set();
 let publishedCount=0;
 let globeInstance=null;
 let globeFeatures=[];
+let supabaseClient=null;
 
 const $=id=>document.getElementById(id);
+
+function getSupabaseClient(){
+  if(supabaseClient)return supabaseClient;
+  if(window.supabase&&typeof window.supabase.createClient==='function'){
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    return supabaseClient;
+  }
+  return null;
+}
 
 const safeURL=u=>{
 try{
@@ -1211,34 +1231,73 @@ return {
 };
 }
 
-async function loadPublishedRecords(){
-try{
-const response=await fetch('./data/records.json',{cache:'no-store'});
-if(!response.ok)throw new Error('Published database unavailable');
+function mapSupabaseRow(row){
+  const mappedCountry=(row.country||'').trim();
+  const mappedRegion=row.region||regionOf(mappedCountry)||'Global';
+  const mappedCategory=row.category||CATEGORY_ID_MAP[row.category_id]||'';
+  const mappedDesc=row.short_description||row.description||'';
+  const mappedUrl=row.official_url||'https://worldwideartadvocacy.org/';
 
-const data=await response.json();
-if(!Array.isArray(data.records))throw new Error('Invalid database');
-
-const published=data.records.filter(isUsableRecord).map(normalizeRecord);
-publishedIds=new Set(published.map(r=>r.id));
-publishedCount=published.length;
-
-const merged=new Map();
-published.forEach(r=>merged.set(r.id,r));
-
-records.forEach((r,i)=>{
-if(r&&r.id&&!publishedIds.has(r.id))merged.set(r.id,r);
-else if(r&&!r.id)merged.set('local-'+i,normalizeRecord(r,i));
-});
-
-records=[...merged.values()];
-renderResults();
-
-}catch(error){
-// The published JSON file is optional during the standalone/front-end phase.
-console.info('WAA published directory not loaded; retaining local starter records.',error);
-renderResults();
+  return normalizeRecord({
+    id:row.id,
+    title:row.title,
+    type:row.resource_type||'Art resource',
+    country:mappedCountry||'Global',
+    region:mappedRegion,
+    city:row.city||'',
+    category:mappedCategory,
+    description:mappedDesc,
+    url:mappedUrl,
+    tags:Array.isArray(row.keywords)?row.keywords:[],
+    verified:row.editorial_status==='verified'?'verified':'unverified',
+    source:row.external_identifier||row.contact_email||'WAA Directory'
+  });
 }
+
+async function loadPublishedRecords(){
+  const client=getSupabaseClient();
+  if(!client){
+    console.warn('Supabase JS client not yet available.');
+    renderResults();
+    return;
+  }
+
+  try{
+    const {data,error}=await client
+      .from('resources')
+      .select(`
+        id,title,slug,resource_type,category_id,country_id,country,region,city,
+        description,short_description,official_url,contact_email,keywords,
+        external_identifier,editorial_status,publication_status,lifecycle_status
+      `)
+      .eq('publication_status','published')
+      .eq('editorial_status','verified')
+      .eq('lifecycle_status','active')
+      .order('created_at',{ascending:false});
+
+    if(error)throw error;
+
+    const published=(Array.isArray(data)?data:[])
+      .map(mapSupabaseRow)
+      .filter(isUsableRecord);
+
+    publishedIds=new Set(published.map(r=>r.id));
+    publishedCount=published.length;
+
+    const merged=new Map();
+    published.forEach(r=>merged.set(r.id,r));
+
+    records.forEach((r,i)=>{
+      if(r&&r.id&&!publishedIds.has(r.id))merged.set(r.id,r);
+      else if(r&&!r.id)merged.set('local-'+i,normalizeRecord(r,i));
+    });
+
+    records=[...merged.values()];
+    renderResults();
+  }catch(error){
+    console.warn('WAA Supabase published directory fetch error:',error);
+    renderResults();
+  }
 }
 
 function buildRegions(){
@@ -1700,7 +1759,7 @@ if(e.target.files[0])importJSON(e.target.files[0]);
 e.target.value='';
 });
 
-/* Initialise the Explorer and load the published database */
+/* Initialise the Explorer and load the published Supabase database */
 function init(){
 loadRecords();
 buildRegions();
@@ -1708,7 +1767,11 @@ buildCountries();
 buildCategories();
 renderResults();
 
-loadPublishedRecords();
+const sbScript=document.createElement('script');
+sbScript.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+sbScript.onload=()=>loadPublishedRecords();
+sbScript.onerror=()=>renderResults();
+document.head.appendChild(sbScript);
 }
 init();
 
