@@ -38,6 +38,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:18px;pa
 .searchbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#173b3b;padding:13px 15px;font-size:15px}
 .searchbox input::placeholder{color:#718582}
 .primary{border:0;border-radius:11px;background:var(--teal);color:white;padding:13px 20px;font-weight:700}
+.primary:disabled{opacity:.55;cursor:not-allowed}
 .search-meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:13px auto 0;color:var(--soft);font-size:11px}
 .quick{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:12px}
 .chip{border:1px solid #315e60;background:#0d2b30;color:#c8ded9;border-radius:30px;padding:7px 11px;font-size:11px}
@@ -219,16 +220,25 @@ align-items:center;gap:15px;flex-wrap:wrap
 body.modal-open{overflow:hidden}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
-.modalbox{width:min(600px,100%);max-height:90vh;overflow:auto;background:#0a2226;border:1px solid #477574;border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.modalbox{width:min(660px,100%);max-height:90vh;overflow:auto;background:#0a2226;border:1px solid #477574;border-radius:18px;padding:22px;box-shadow:var(--shadow)}
 .modalbox h2{font:29px Georgia,serif;margin:0 0 6px}
 .modalbox>p{color:var(--muted);font-size:12px;line-height:1.6}
+.form-section-title{grid-column:1/-1;font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);border-top:1px solid #285457;padding-top:12px;margin-top:4px}
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .formfield{display:flex;flex-direction:column;gap:6px}
 .formfield.full{grid-column:1/-1}
 .formfield label{font-size:10px;color:var(--mint);text-transform:uppercase;letter-spacing:1px}
 .formfield input,.formfield select,.formfield textarea{width:100%;padding:11px;border:1px solid var(--line);background:#07191d;color:var(--ink);border-radius:9px;outline:none}
-.formfield textarea{min-height:75px;resize:vertical}
-.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+.formfield textarea{min-height:80px;resize:vertical}
+.field-hint{font-size:10px;color:var(--soft);line-height:1.45}
+.check-row{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border:1px solid #2c5b5e;border-radius:10px;background:#07191d;font-size:11px;line-height:1.5;color:#d5e4df}
+.check-row input[type="checkbox"]{width:auto;margin-top:2px;flex-shrink:0;accent-color:var(--teal)}
+.submit-feedback{margin-top:12px;padding:12px 14px;border-radius:11px;font-size:12px;line-height:1.55;display:none}
+.submit-feedback.show{display:block}
+.submit-feedback.success{background:#0f3734;border:1px solid #4fa398;color:#dcf5f0}
+.submit-feedback.error{background:#38181c;border:1px solid #b5535e;color:#ffd9de}
+.hp-trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .status{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);background:#eaf6f1;color:#123b38;border-radius:30px;padding:10px 15px;font-size:12px;box-shadow:var(--shadow);display:none;z-index:20;max-width:90%;text-align:center}
 .status.show{display:block}
 .hide{display:none!important}
@@ -465,10 +475,10 @@ header{padding:17px 0}
 <div>
 <div class="eyebrow">Searchable discovery directory</div>
 <h2>Discover resources</h2>
-<p>Search and filter the directory. New entries can be added to your local working dataset.</p>
+<p>Search verified global art resources or submit a resource for WAA editorial review and publication.</p>
 </div>
 <div class="toolbar">
-<button class="smallbtn" id="addEntry">＋ Add resource</button>
+<button class="primary" id="addEntry" style="padding:9px 14px;font-size:11px;border-radius:9px">＋ Contribute a resource</button>
 <button class="smallbtn" id="exportData">Export JSON</button>
 <button class="smallbtn" id="importData">Import JSON</button>
 <input id="importFile" type="file" accept="application/json,.json" class="hide">
@@ -498,7 +508,7 @@ header{padding:17px 0}
 <button class="smallbtn" id="resetFilters">Reset filters</button>
 </div>
 <div class="results" id="results"></div>
-<p class="note" style="margin-top:13px">Directory integrity: entries added here are saved in this browser only. Export your JSON to back them up or move the dataset. A shared, multi-user database and live submissions require a connected backend in a later phase.</p>
+<p class="note" style="margin-top:13px">Editorial moderation: public contributions are sent privately to Worldwide Art Advocacy for review of accuracy, links, duplication, relevance and image rights before publication. Local JSON import/export remains available for personal backups.</p>
 </section>
 
 <section class="section">
@@ -520,19 +530,41 @@ WAA GLOBAL ART EXPLORER · AN INDEPENDENT DISCOVERY PORTAL CONNECTED TO
 </footer>
 </div>
 
+<!-- WAA Public Contribution Modal -->
 <div class="modal" id="entryModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
 <div class="modalbox">
-<h2 id="modalTitle">Add a directory resource</h2>
-<p>Add an artist, institution, cultural resource, event or opportunity. Include a reliable source URL. This first version saves entries in this browser.</p>
-<form id="entryForm">
+<h2 id="modalTitle">Contribute a resource to WAA</h2>
+<p>Suggest an artist, gallery, museum, cultural tradition, exhibition or opportunity from anywhere in the world. Submissions are held privately for WAA editorial review before appearing in the public Explorer.</p>
+
+<form id="entryForm" novalidate>
+<!-- Anti-spam honeypot field (do not fill) -->
+<div class="hp-trap" aria-hidden="true">
+<label for="websiteConfirm">Leave blank</label>
+<input id="websiteConfirm" name="website_confirm" type="text" tabindex="-1" autocomplete="off">
+</div>
+
 <div class="formgrid">
+<div class="form-section-title">Your contributor details (private to WAA)</div>
+
 <div class="formfield">
-<label for="entryTitle">Name / title *</label>
-<input id="entryTitle" required maxlength="120" placeholder="Resource name">
+<label for="contributorName">Your name *</label>
+<input id="contributorName" name="contributor_name" required minlength="2" maxlength="120" placeholder="Full name or organisation">
+</div>
+<div class="formfield">
+<label for="contributorEmail">Your email *</label>
+<input id="contributorEmail" name="contributor_email" type="email" required maxlength="160" placeholder="you@example.org">
+<span class="field-hint">Used only if WAA needs follow-up clarification during review.</span>
+</div>
+
+<div class="form-section-title">Resource details</div>
+
+<div class="formfield">
+<label for="entryTitle">Resource title *</label>
+<input id="entryTitle" name="title" required minlength="2" maxlength="160" placeholder="Artist, institution, event or opportunity name">
 </div>
 <div class="formfield">
 <label for="entryType">Resource type *</label>
-<select id="entryType" required>
+<select id="entryType" name="resource_type" required>
 <option value="">Choose type</option>
 <option>Artist</option>
 <option>Artwork / Art form</option>
@@ -545,50 +577,83 @@ WAA GLOBAL ART EXPLORER · AN INDEPENDENT DISCOVERY PORTAL CONNECTED TO
 <option>WAA resource</option>
 </select>
 </div>
+
+<div class="formfield">
+<label for="entryCategory">Category *</label>
+<select id="entryCategory" name="category_id" required>
+<option value="">Loading categories…</option>
+</select>
+</div>
 <div class="formfield">
 <label for="entryCountry">Country *</label>
-<select id="entryCountry" required></select>
+<select id="entryCountry" name="country_id" required>
+<option value="">Loading countries…</option>
+</select>
+</div>
+
+<div class="formfield">
+<label for="entryRegion">Region / state</label>
+<input id="entryRegion" name="region" maxlength="100" placeholder="Optional (e.g. Edo State, West Africa)">
 </div>
 <div class="formfield">
 <label for="entryCity">City / locality</label>
-<input id="entryCity" maxlength="80" placeholder="City (optional)">
+<input id="entryCity" name="city" maxlength="100" placeholder="Optional (e.g. Benin City, Lagos)">
+</div>
+
+<div class="formfield">
+<label for="entryOfficialUrl">Official website *</label>
+<input id="entryOfficialUrl" name="official_url" type="url" required placeholder="https://…">
 </div>
 <div class="formfield">
-<label for="entryCategory">Art category</label>
-<select id="entryCategory">
-<option value="">Choose category</option>
-<option>Artists & Creative Professionals</option>
-<option>Artworks & Art Forms</option>
-<option>Galleries, Museums & Art Spaces</option>
-<option>Cultures & Art Heritage</option>
-<option>Exhibitions & Art Events</option>
-<option>Education & Research</option>
-<option>Opportunities & Development</option>
-<option>Art Business & Professional Services</option>
-</select>
+<label for="entrySourceUrl">Reference / source URL</label>
+<input id="entrySourceUrl" name="source_url" type="url" placeholder="https://… (optional archive or announcement)">
 </div>
-<div class="formfield">
-<label for="entrySource">Official website / source URL *</label>
-<input id="entrySource" type="url" required placeholder="https://…">
-</div>
+
 <div class="formfield full">
 <label for="entryDescription">Description *</label>
-<textarea id="entryDescription" required maxlength="500" placeholder="Write a concise, factual introduction."></textarea>
+<textarea id="entryDescription" name="description" required minlength="20" maxlength="1500" placeholder="Provide a clear, factual summary of the resource, its focus, and why it is valuable to the global art community."></textarea>
 </div>
-<div class="formfield">
+
+<div class="formfield full">
 <label for="entryTags">Search keywords</label>
-<input id="entryTags" placeholder="painting, contemporary, textile">
+<input id="entryTags" name="keywords" maxlength="240" placeholder="Comma-separated keywords, e.g. sculpture, residency, contemporary, textile">
+</div>
+
+<div class="form-section-title">Optional image & rights information</div>
+
+<div class="formfield full">
+<label for="entryImage">Image upload (JPEG, PNG or WebP · max 5 MB)</label>
+<input id="entryImage" name="image_file" type="file" accept="image/jpeg,image/png,image/webp">
+<span class="field-hint">Optional. If you upload an image, you must provide its credit/source and rights status below.</span>
+</div>
+
+<div class="formfield">
+<label for="entryImageCredit">Image credit / source</label>
+<input id="entryImageCredit" name="image_credit" maxlength="160" placeholder="Photographer, artist or source name">
 </div>
 <div class="formfield">
-<label for="entryVerified">Verification status</label>
-<select id="entryVerified">
-<option value="unverified">Awaiting WAA review</option>
+<label for="entryImageRights">Image rights / permission</label>
+<select id="entryImageRights" name="image_rights">
+<option value="">Select rights status (if uploading image)</option>
+<option value="Contributor owns rights & grants WAA review/display permission">Contributor owns rights & grants WAA permission</option>
+<option value="Official press/media kit authorised for public feature">Official press/media kit authorised for feature</option>
+<option value="Open license (CC BY / CC0 / Public Domain) — credit noted">Open license (CC BY / CC0 / Public Domain)</option>
 </select>
 </div>
+
+<div class="formfield full">
+<label class="check-row" for="contributorConsent">
+<input id="contributorConsent" name="contributor_consent" type="checkbox" required>
+<span>I confirm that the submitted details are accurate to the best of my knowledge and I understand that Worldwide Art Advocacy (WAA) will review, edit if necessary, and decide whether to publish this entry in the Global Art Explorer. *</span>
+</label>
 </div>
+</div>
+
+<div class="submit-feedback" id="submitFeedback" role="alert" aria-live="polite"></div>
+
 <div class="modal-actions">
 <button type="button" class="smallbtn" id="cancelEntry">Cancel</button>
-<button type="submit" class="primary">Save resource</button>
+<button type="submit" class="primary" id="submitContributionBtn">Submit for WAA review</button>
 </div>
 </form>
 </div>
@@ -660,15 +725,7 @@ const COUNTRY_ALIASES={
 'kyrgyz republic':'Kyrgyzstan'
 };
 
-/*
-Country-specific profiles.
-These are selected examples, not exhaustive inventories.
-A profile is only displayed as country-specific when its country
-has an entry here. Other countries receive clearly labelled
-regional context instead.
-*/
 const COUNTRY_PROFILES={
-
 "Nigeria":{
 artForms:[
 "Benin bronze and brass casting, associated with the historic Benin Kingdom.",
@@ -685,7 +742,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC PROFILE — Selected Nigerian artistic traditions. These examples are not an exhaustive account of the country's many ethnic and regional cultures."
 },
-
 "Ghana":{
 artForms:[
 "Kente weaving, particularly associated with Asante and Ewe communities.",
@@ -701,7 +757,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC PROFILE — Kente and Adinkra are important examples, but Ghana's artistic heritage includes many other community-based traditions."
 },
-
 "Japan":{
 artForms:[
 "Ukiyo-e woodblock prints.",
@@ -717,7 +772,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC PROFILE — Selected examples from Japan's varied historical and contemporary art cultures."
 },
-
 "Mexico":{
 artForms:[
 "Mexican muralism, including large-scale public and socially engaged painting.",
@@ -733,7 +787,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC PROFILE — Mexico's artistic heritage includes Indigenous, colonial, modern and contemporary histories."
 },
-
 "Australia":{
 artForms:[
 "Aboriginal Australian art traditions, including painting, carving, engraving and rock art.",
@@ -749,7 +802,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC PROFILE — Aboriginal and Torres Strait Islander peoples have distinct cultures and artistic traditions; no single style represents all communities."
 },
-
 "Benin":{
 artForms:[
 "Fon and other community-based wood carving and sculpture.",
@@ -763,7 +815,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — The Republic of Benin is distinct from the historic Kingdom of Benin, centred in present-day Nigeria."
 },
-
 "Ethiopia":{
 artForms:[
 "Ethiopian Christian icon painting and illuminated manuscripts.",
@@ -778,7 +829,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Ethiopia's artistic heritage spans multiple religious, linguistic and cultural communities."
 },
-
 "Egypt":{
 artForms:[
 "Ancient Egyptian sculpture, relief carving and wall painting.",
@@ -793,7 +843,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected ancient, religious, modern and contemporary traditions."
 },
-
 "South Africa":{
 artForms:[
 "Ndebele mural painting and geometric house decoration.",
@@ -808,7 +857,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected traditions among South Africa's many communities."
 },
-
 "India":{
 artForms:[
 "Madhubani, Warli and other regional painting traditions.",
@@ -823,7 +871,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Examples from a large and regionally diverse art history."
 },
-
 "China":{
 artForms:[
 "Chinese ink painting and calligraphy.",
@@ -838,7 +885,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected historical and contemporary Chinese art traditions."
 },
-
 "Indonesia":{
 artForms:[
 "Batik wax-resist textile traditions.",
@@ -853,7 +899,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Indonesia's art traditions are diverse across its archipelago."
 },
-
 "Peru":{
 artForms:[
 "Andean textile weaving and embroidery.",
@@ -868,7 +913,6 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Selected Andean and wider Peruvian traditions."
 },
-
 "New Zealand":{
 artForms:[
 "Māori whakairo (carving) and tukutuku panel arts.",
@@ -883,10 +927,8 @@ traditions:[
 ],
 note:"COUNTRY-SPECIFIC STARTER PROFILE — Māori cultural knowledge and artistic practices should be represented with respect for community ownership and protocols."
 }
-
 };
 
-/* Regional context is deliberately identified as regional, not national. */
 const REGIONAL_ART_CONTEXT={
 "Africa":"African art is not one single tradition. Across the continent, artistic practices include diverse sculptural, textile, ceramic, metalworking, architectural, performance and contemporary art traditions. This is broad regional context, not a description of this country's specific heritage.",
 "Europe":"European art includes many distinct national and local histories, from ancient and medieval traditions to modern and contemporary movements. This is broad regional context, not a verified list of this country's signature traditions.",
@@ -947,6 +989,10 @@ updated:'2026-11-10'
 const SUPABASE_URL='https://zainnrdvaxxgtxxrifnh.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_kxaUfGG3EtgpF1VntJUb1A_bE1KEAds';
 const STORE='waa_global_art_explorer_records_v1';
+const SUBMISSION_BUCKET='submission-images';
+const MAX_IMAGE_BYTES=5*1024*1024;
+const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp'];
+const SUBMIT_COOLDOWN_MS=15000;
 
 const CATEGORY_ID_MAP={
   '47420b16-0167-4693-999f-ca8631c6447d':'Galleries, Museums & Art Spaces',
@@ -967,6 +1013,9 @@ let publishedCount=0;
 let globeInstance=null;
 let globeFeatures=[];
 let supabaseClient=null;
+let dbCountries=[];
+let dbCategories=[];
+let lastSubmissionAt=0;
 
 const $=id=>document.getElementById(id);
 
@@ -996,7 +1045,21 @@ if(!el)return;
 el.textContent=msg;
 el.classList.add('show');
 if(notify.timer)clearTimeout(notify.timer);
-notify.timer=setTimeout(()=>el.classList.remove('show'),3600);
+notify.timer=setTimeout(()=>el.classList.remove('show'),3800);
+}
+
+function showSubmitFeedback(type,message){
+const box=$('submitFeedback');
+if(!box)return;
+box.className=`submit-feedback show ${type}`;
+box.textContent=message;
+}
+
+function clearSubmitFeedback(){
+const box=$('submitFeedback');
+if(!box)return;
+box.className='submit-feedback';
+box.textContent='';
 }
 
 function normalizeCountryName(name){
@@ -1078,7 +1141,6 @@ return match&&normalizeCountryName(match.name)===normalizeCountryName(selectedCo
 });
 }
 
-/* Create a high-contrast country label */
 function makeCountryLabel(d){
 const label=document.createElement('div');
 label.className='globe-country-label';
@@ -1087,7 +1149,6 @@ label.setAttribute('aria-label','Selected country: '+d.name);
 return label;
 }
 
-/* Highlight selected country with gold fill, bright border and raised surface */
 function updateGlobeSelection(){
 if(!globeInstance||!globeFeatures.length)return;
 
@@ -1136,7 +1197,6 @@ altitude:1.45
 }
 }
 
-/* Render a country-specific profile or a clearly labelled regional introduction */
 function renderCountryProfile(name,region){
 const profile=COUNTRY_PROFILES[name];
 
@@ -1202,7 +1262,7 @@ return false;
 
 function isSafeHttpURL(value){
 try{
-const url=new URL(String(value||''));
+const url=new URL(String(value||'').trim());
 return url.protocol==='https:'||url.protocol==='http:';
 }catch(e){return false;}
 }
@@ -1300,6 +1360,116 @@ async function loadPublishedRecords(){
   }
 }
 
+function pickDisplayLabel(row, preferredKeys = []) {
+  if (!row || typeof row !== 'object') return '';
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const keysToCheck = [
+    ...preferredKeys,
+    'name', 'title', 'label', 'category_name', 'country_name', 'common_name'
+  ];
+
+  for (const key of keysToCheck) {
+    const val = row[key];
+    if (typeof val === 'string' && val.trim() && !uuidRegex.test(val.trim())) {
+      return val.trim();
+    }
+  }
+
+  for (const [key, val] of Object.entries(row)) {
+    if (key === 'id' || key.endsWith('_id') || key.endsWith('_at')) continue;
+    if (typeof val === 'string' && val.trim() && !uuidRegex.test(val.trim())) {
+      return val.trim();
+    }
+  }
+
+  return '';
+}
+
+function populateCountryDropdownFromDirectory() {
+  const countrySelect = $('entryCountry');
+  if (!countrySelect) return;
+
+  countrySelect.innerHTML = '<option value="">Choose country (optional for global)</option>';
+
+  const groups = {};
+  REGIONS.forEach(r => (groups[r] = []));
+  allCountries.forEach(c => {
+    if (groups[c.region]) groups[c.region].push(c.name);
+  });
+
+  REGIONS.forEach(r => {
+    const og = document.createElement('optgroup');
+    og.label = r;
+    groups[r].sort((a, b) => a.localeCompare(b)).forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      og.appendChild(opt);
+    });
+    countrySelect.appendChild(og);
+  });
+}
+
+async function loadSubmissionLookups() {
+  const client = getSupabaseClient();
+  const catSelect = $('entryCategory');
+  const countrySelect = $('entryCountry');
+  if (!catSelect || !countrySelect) return;
+
+  // Populate country dropdown immediately from existing COUNTRY_DATA directory
+  populateCountryDropdownFromDirectory();
+
+  if (!client) {
+    catSelect.innerHTML = '<option value="">Unable to connect to categories</option>';
+    return;
+  }
+
+  try {
+    const [catRes, countryRes] = await Promise.all([
+      client.from('resource_categories').select('*'),
+      client.from('countries').select('*')
+    ]);
+
+    if (catRes.error) {
+      console.warn('Categories lookup error:', catRes.error);
+      catSelect.innerHTML = `<option value="">Error loading categories (${esc(catRes.error.message)})</option>`;
+    } else if (Array.isArray(catRes.data) && catRes.data.length) {
+      const normalizedCats = catRes.data
+        .filter(row => row.is_active !== false)
+        .map(row => ({
+          id: row.id,
+          label: pickDisplayLabel(row, ['category_name', 'name', 'title'])
+        }))
+        .filter(item => item.id && item.label)
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+      dbCategories = normalizedCats;
+      catSelect.innerHTML = '<option value="">Choose category</option>';
+      normalizedCats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.label;
+        catSelect.appendChild(opt);
+      });
+    } else {
+      catSelect.innerHTML = '<option value="">No categories available</option>';
+    }
+
+    if (!countryRes.error && Array.isArray(countryRes.data) && countryRes.data.length) {
+      dbCountries = countryRes.data
+        .filter(row => row.is_active !== false)
+        .map(row => ({
+          id: row.id,
+          label: pickDisplayLabel(row, ['country_name', 'name', 'title'])
+        }))
+        .filter(item => item.id && item.label);
+    }
+  } catch (err) {
+    console.warn('WAA submission lookup load error:', err);
+    catSelect.innerHTML = '<option value="">Could not load categories</option>';
+  }
+}
+
 function buildRegions(){
 const box=$('regionButtons');
 
@@ -1321,21 +1491,10 @@ $('filterRegion').appendChild(o);
 function buildCountries(){
 allCountries.sort((a,b)=>a.name.localeCompare(b.name));
 
-[$('countrySelect'),$('entryCountry')].forEach(sel=>{
+const sel=$('countrySelect');
 const groups={};
 REGIONS.forEach(r=>groups[r]=[]);
 allCountries.forEach(c=>groups[c.region].push(c.name));
-
-if(sel.id==='entryCountry'){
-const placeholder=document.createElement('option');
-placeholder.value='';
-placeholder.textContent='Choose a country or territory';
-sel.appendChild(placeholder);
-const globalOption=document.createElement('option');
-globalOption.value='Global';
-globalOption.textContent='Global / International';
-sel.appendChild(globalOption);
-}
 
 REGIONS.forEach(r=>{
 const og=document.createElement('optgroup');
@@ -1347,7 +1506,6 @@ o.textContent=n;
 og.appendChild(o);
 });
 sel.appendChild(og);
-});
 });
 }
 
@@ -1479,7 +1637,7 @@ box.innerHTML=`
 There are currently no matching records for this selection.
 WAA can expand this country directory as resources are researched and verified.
 <br><br>
-<button class="smallbtn" id="emptyAdd">＋ Add a resource</button>
+<button class="primary" id="emptyAdd" style="padding:9px 14px;font-size:11px;border-radius:9px">＋ Contribute a resource</button>
 </div>`;
 const a=$('emptyAdd');
 if(a)a.onclick=openModal;
@@ -1541,15 +1699,20 @@ let modalReturnFocus=null;
 
 function openModal(){
 modalReturnFocus=document.activeElement;
+clearSubmitFeedback();
 $('entryModal').classList.add('show');
 document.body.classList.add('modal-open');
-$('entryTitle').focus();
+if(!dbCategories.length||!dbCountries.length){
+loadSubmissionLookups();
+}
+$('contributorName').focus();
 }
 
 function closeModal(){
 $('entryModal').classList.remove('show');
 document.body.classList.remove('modal-open');
 $('entryForm').reset();
+clearSubmitFeedback();
 if(modalReturnFocus&&typeof modalReturnFocus.focus==='function')modalReturnFocus.focus();
 }
 
@@ -1568,49 +1731,201 @@ else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.foc
 }
 });
 
-/* Add a local directory entry */
-$('entryForm').addEventListener('submit',e=>{
+function getImageExtension(file){
+const map={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+return map[file?.type]||'';
+}
+
+/* Submit a public resource contribution to WAA's private moderation queue */
+$('entryForm').addEventListener('submit',async e=>{
 e.preventDefault();
+clearSubmitFeedback();
 
-const country=$('entryCountry').value;
-const url=$('entrySource').value.trim();
-
-if(!country){
-notify('Please select a country or territory.');
-$('entryCountry').focus();
-return;
-}
-if(!isSafeHttpURL(url)){
-notify('Please enter a complete website URL beginning with https:// or http://');
-$('entrySource').focus();
+// 1. Honeypot anti-spam trap
+if($('websiteConfirm').value.trim()!==''){
+showSubmitFeedback('error','Submission blocked by automated form check.');
 return;
 }
 
-const item=normalizeRecord({
-id:'waa-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
-title:$('entryTitle').value.trim(),
-type:$('entryType').value,
-country,
-region:regionOf(country)||'Global',
-city:$('entryCity').value.trim(),
-category:$('entryCategory').value,
-description:$('entryDescription').value.trim(),
-url,
-tags:$('entryTags').value.split(',').map(s=>s.trim()).filter(Boolean),
-verified:'unverified',
-source:'User-submitted; review before publication',
-updated:new Date().toISOString().slice(0,10)
-});
-
-records.unshift(item);
-if(!saveRecords()){
-records.shift();
-notify('The resource could not be saved. Browser storage may be full or disabled.');
+// 2. Cooldown guard against rapid duplicate clicks
+const now=Date.now();
+if(now-lastSubmissionAt<SUBMIT_COOLDOWN_MS){
+const waitSec=Math.ceil((SUBMIT_COOLDOWN_MS-(now-lastSubmissionAt))/1000);
+showSubmitFeedback('error',`Please wait ${waitSec} second${waitSec===1?'':'s'} before submitting another entry.`);
 return;
 }
-closeModal();
-renderResults();
-notify('Resource saved in this browser. Export the JSON to back it up.');
+
+const contributorName=$('contributorName').value.trim();
+const contributorEmail=$('contributorEmail').value.trim();
+const title=$('entryTitle').value.trim();
+const resourceType=$('entryType').value;
+const categoryId=$('entryCategory').value;
+const selectedCountryName=$('entryCountry').value.trim()||null;
+const matchedCountry=selectedCountryName
+  ?dbCountries.find(c=>normalizeCountryName(c.label)===normalizeCountryName(selectedCountryName))
+  :null;
+const countryId=matchedCountry?matchedCountry.id:null;
+const region=$('entryRegion').value.trim()||null;
+const city=$('entryCity').value.trim()||null;
+const officialUrl=$('entryOfficialUrl').value.trim();
+const sourceUrl=$('entrySourceUrl').value.trim()||null;
+const description=$('entryDescription').value.trim();
+const imageFile=$('entryImage').files?.[0]||null;
+const imageCredit=$('entryImageCredit').value.trim()||null;
+const imageRights=$('entryImageRights').value||null;
+const consentChecked=$('contributorConsent').checked;
+
+if(contributorName.length<2){
+showSubmitFeedback('error','Please enter your name (at least 2 characters).');
+$('contributorName').focus();
+return;
+}
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contributorEmail)){
+showSubmitFeedback('error','Please enter a valid email address.');
+$('contributorEmail').focus();
+return;
+}
+if(title.length<2){
+showSubmitFeedback('error','Please enter a resource title.');
+$('entryTitle').focus();
+return;
+}
+if(!resourceType){
+showSubmitFeedback('error','Please choose a resource type.');
+$('entryType').focus();
+return;
+}
+if(!categoryId){
+showSubmitFeedback('error','Please choose a category.');
+$('entryCategory').focus();
+return;
+}
+if(!isSafeHttpURL(officialUrl)){
+showSubmitFeedback('error','Please enter a valid official website URL starting with https:// or http://.');
+$('entryOfficialUrl').focus();
+return;
+}
+if(sourceUrl&&!isSafeHttpURL(sourceUrl)){
+showSubmitFeedback('error','If providing a reference URL, it must start with https:// or http://.');
+$('entrySourceUrl').focus();
+return;
+}
+if(description.length<20){
+showSubmitFeedback('error','Please write a description of at least 20 characters.');
+$('entryDescription').focus();
+return;
+}
+if(imageFile){
+if(!ALLOWED_IMAGE_TYPES.includes(imageFile.type)){
+showSubmitFeedback('error','Only JPEG, PNG, or WebP images are supported.');
+$('entryImage').focus();
+return;
+}
+if(imageFile.size>MAX_IMAGE_BYTES){
+showSubmitFeedback('error','Image file must be 5 MB or smaller.');
+$('entryImage').focus();
+return;
+}
+if(!imageCredit||!imageRights){
+showSubmitFeedback('error','When uploading an image, please enter both the image credit/source and rights/permission status.');
+if(!imageCredit)$('entryImageCredit').focus();
+else $('entryImageRights').focus();
+return;
+}
+}
+if(!consentChecked){
+showSubmitFeedback('error','Please confirm that you understand WAA will review the submission prior to publication.');
+$('contributorConsent').focus();
+return;
+}
+
+const client=getSupabaseClient();
+if(!client){
+showSubmitFeedback('error','Connection to WAA submission service is not ready yet. Please refresh and try again.');
+return;
+}
+
+const submitBtn=$('submitContributionBtn');
+submitBtn.disabled=true;
+submitBtn.textContent='Submitting…';
+
+try{
+let uploadedImageUrl=null;
+
+if(imageFile){
+const ext=getImageExtension(imageFile);
+const uniqueId=(window.crypto&&typeof window.crypto.randomUUID==='function')
+  ?window.crypto.randomUUID()
+  :`${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
+const storagePath=`pending/${uniqueId}.${ext}`;
+
+const {error:uploadError}=await client.storage
+  .from(SUBMISSION_BUCKET)
+  .upload(storagePath,imageFile,{
+    contentType:imageFile.type,
+    cacheControl:'3600',
+    upsert:false
+  });
+
+if(uploadError)throw uploadError;
+
+const {data:pubUrlData}=client.storage
+  .from(SUBMISSION_BUCKET)
+  .getPublicUrl(storagePath);
+
+uploadedImageUrl=pubUrlData?.publicUrl||null;
+}
+
+const keywords=$('entryTags').value
+  .split(',')
+  .map(s=>s.trim())
+  .filter(Boolean)
+  .slice(0,25);
+
+const payload={
+  contributor_name:contributorName,
+  contributor_email:contributorEmail,
+  title,
+  resource_type:resourceType,
+  category_id:categoryId,
+  country_id:countryId,
+  country_text:selectedCountryName,
+  region,
+  city,
+  description,
+  official_url:officialUrl,
+  source_url:sourceUrl,
+  image_url:uploadedImageUrl,
+  image_credit:imageFile?imageCredit:null,
+  image_rights:imageFile?imageRights:null,
+  keywords,
+  contributor_consent:true,
+  submission_status:'pending'
+};
+
+const {error:insertError}=await client
+  .from('resource_submissions')
+  .insert([payload]);
+
+if(insertError)throw insertError;
+
+lastSubmissionAt=Date.now();
+$('entryForm').reset();
+showSubmitFeedback(
+  'success',
+  'Thank you. Your contribution has been received privately and is now awaiting WAA editorial review before publication in the Global Art Explorer.'
+);
+notify('Contribution submitted for WAA editorial review.');
+}catch(err){
+console.warn('WAA contribution submit error:',err);
+showSubmitFeedback(
+  'error',
+  err?.message||'Could not submit your contribution right now. Please check your details and try again.'
+);
+}finally{
+submitBtn.disabled=false;
+submitBtn.textContent='Submit for WAA review';
+}
 });
 
 /* Export directory data */
@@ -1662,7 +1977,6 @@ if(!normalized.id||importedIds.has(normalized.id)){
 normalized.id='import-'+stamp+'-'+i;
 }
 importedIds.add(normalized.id);
-// Imported material is never promoted to verified status by import alone.
 normalized.verified='unverified';
 map.set(normalized.id,normalized);
 });
@@ -1759,7 +2073,6 @@ if(e.target.files[0])importJSON(e.target.files[0]);
 e.target.value='';
 });
 
-/* Initialise the Explorer and load the published Supabase database */
 function init(){
 loadRecords();
 buildRegions();
@@ -1769,7 +2082,10 @@ renderResults();
 
 const sbScript=document.createElement('script');
 sbScript.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-sbScript.onload=()=>loadPublishedRecords();
+sbScript.onload=()=>{
+loadPublishedRecords();
+loadSubmissionLookups();
+};
 sbScript.onerror=()=>renderResults();
 document.head.appendChild(sbScript);
 }
