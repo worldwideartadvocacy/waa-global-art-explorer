@@ -479,9 +479,6 @@ header{padding:17px 0}
 </div>
 <div class="toolbar">
 <button class="primary" id="addEntry" style="padding:9px 14px;font-size:11px;border-radius:9px">＋ Contribute a resource</button>
-<button class="smallbtn" id="exportData">Export JSON</button>
-<button class="smallbtn" id="importData">Import JSON</button>
-<input id="importFile" type="file" accept="application/json,.json" class="hide">
 </div>
 </div>
 
@@ -508,7 +505,7 @@ header{padding:17px 0}
 <button class="smallbtn" id="resetFilters">Reset filters</button>
 </div>
 <div class="results" id="results"></div>
-<p class="note" style="margin-top:13px">Editorial moderation: public contributions are sent privately to Worldwide Art Advocacy for review of accuracy, links, duplication, relevance and image rights before publication. Local JSON import/export remains available for personal backups.</p>
+<p class="note" style="margin-top:13px">Editorial moderation: public contributions are sent privately to Worldwide Art Advocacy for review of accuracy, links, duplication, relevance and image rights before publication.</p>
 </section>
 
 <section class="section">
@@ -1250,16 +1247,6 @@ console.warn('WAA Explorer local storage could not be read:',e);
 }
 }
 
-function saveRecords(){
-try{
-localStorage.setItem(STORE,JSON.stringify(records));
-return true;
-}catch(e){
-console.warn('WAA Explorer local storage could not be written:',e);
-return false;
-}
-}
-
 function isSafeHttpURL(value){
 try{
 const url=new URL(String(value||'').trim());
@@ -1416,7 +1403,6 @@ async function loadSubmissionLookups() {
   const countrySelect = $('entryCountry');
   if (!catSelect || !countrySelect) return;
 
-  // Populate country dropdown immediately from existing COUNTRY_DATA directory
   populateCountryDropdownFromDirectory();
 
   if (!client) {
@@ -1928,75 +1914,6 @@ submitBtn.textContent='Submit for WAA review';
 }
 });
 
-/* Export directory data */
-function exportJSON(){
-const payload={
-schema:'waa-global-art-explorer',
-version:1,
-exportedAt:new Date().toISOString(),
-records
-};
-
-const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-const objectURL=URL.createObjectURL(blob);
-const a=document.createElement('a');
-a.href=objectURL;
-a.download='waa-global-art-explorer-database.json';
-document.body.appendChild(a);
-a.click();
-a.remove();
-setTimeout(()=>URL.revokeObjectURL(objectURL),1500);
-notify('Directory JSON export prepared.');
-}
-
-/* Import directory data */
-function importJSON(file){
-if(!file)return;
-if(file.size>10*1024*1024){
-notify('This JSON file is larger than 10 MB. Split it into smaller files before importing.');
-return;
-}
-const reader=new FileReader();
-reader.onerror=()=>notify('The selected JSON file could not be read.');
-reader.onload=()=>{
-try{
-const parsed=JSON.parse(reader.result);
-const incoming=Array.isArray(parsed)?parsed:parsed?.records;
-if(!Array.isArray(incoming))throw Error('Invalid records');
-if(incoming.length>50000)throw Error('Too many records');
-
-const valid=incoming.filter(isUsableRecord);
-if(!valid.length)throw Error('No valid resource records found');
-
-const map=new Map(records.filter(r=>r&&r.id).map(r=>[r.id,r]));
-const importedIds=new Set();
-const stamp=Date.now();
-valid.forEach((r,i)=>{
-let normalized=normalizeRecord(r,i);
-if(!normalized.id||importedIds.has(normalized.id)){
-normalized.id='import-'+stamp+'-'+i;
-}
-importedIds.add(normalized.id);
-normalized.verified='unverified';
-map.set(normalized.id,normalized);
-});
-
-const previous=records;
-records=[...map.values()];
-if(!saveRecords()){
-records=previous;
-throw Error('Storage unavailable');
-}
-renderResults();
-notify(`${valid.length} valid records imported. All imported records are marked for review.`);
-}catch(err){
-console.warn('WAA Explorer import error:',err);
-notify(err.message==='Storage unavailable'?'Import could not be saved. Browser storage may be full or disabled.':'Import failed: choose a valid WAA Explorer JSON file containing usable records.');
-}
-};
-reader.readAsText(file);
-}
-
 $('searchBtn').addEventListener('click',runSearch);
 $('globalSearch').addEventListener('keydown',e=>{
 if(e.key==='Enter')runSearch();
@@ -2065,12 +1982,6 @@ $('addEntry').addEventListener('click',openModal);
 $('cancelEntry').addEventListener('click',closeModal);
 $('entryModal').addEventListener('click',e=>{
 if(e.target===$('entryModal'))closeModal();
-});
-$('exportData').addEventListener('click',exportJSON);
-$('importData').addEventListener('click',()=>$('importFile').click());
-$('importFile').addEventListener('change',e=>{
-if(e.target.files[0])importJSON(e.target.files[0]);
-e.target.value='';
 });
 
 function init(){
