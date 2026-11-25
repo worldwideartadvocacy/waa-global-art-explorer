@@ -37,7 +37,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:18px;pa
 .searchbox{max-width:900px;margin:28px auto 0;background:#f7fbf9;border-radius:15px;padding:7px;display:flex;gap:8px;box-shadow:var(--shadow)}
 .searchbox input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#173b3b;padding:13px 15px;font-size:15px}
 .searchbox input::placeholder{color:#718582}
-.primary{border:0;border-radius:11px;background:var(--teal);color:white;padding:13px 20px;font-weight:700}
+.primary{border:0;border-radius:11px;background:var(--teal);color:white;padding:13px 20px;font-weight:700;transition:.2s}
+.primary:hover:not(:disabled){background:#238d8d}
 .primary:disabled{opacity:.55;cursor:not-allowed}
 .search-meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:13px auto 0;color:var(--soft);font-size:11px}
 .quick{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:12px}
@@ -155,8 +156,9 @@ font-size:10px;
 line-height:1.65
 }
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
-.smallbtn{border:1px solid var(--line);background:#10373b;color:#e7f1ed;border-radius:9px;padding:9px 11px;font-size:11px}
-.smallbtn:hover{background:#1d7979}
+.smallbtn{border:1px solid var(--line);background:#10373b;color:#e7f1ed;border-radius:9px;padding:9px 11px;font-size:11px;transition:.2s}
+.smallbtn:hover:not(:disabled){background:#1d7979;border-color:#79b7ae}
+.smallbtn:disabled{opacity:.45;cursor:not-allowed}
 .note{font-size:11px;color:var(--soft);line-height:1.6}
 
 /* Category cards */
@@ -198,18 +200,299 @@ align-items:center;gap:15px;flex-wrap:wrap
 .resource-feature p{font-size:12px;color:var(--muted);line-height:1.6;margin:0;max-width:650px}
 .resource-feature a{display:inline-block;background:var(--gold);color:#152b2b;padding:12px 16px;border-radius:9px;text-decoration:none;font-weight:800;font-size:12px}
 
-/* Directory */
-.filters{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:9px;margin:15px 0}
-.filters input,.filters select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0a2226;color:var(--ink);outline:none;font-size:12px}
-.results-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:13px 0;color:var(--muted);font-size:12px}
-.results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.result{background:#0a2226;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:9px;min-height:180px}
-.result .tag{color:var(--mint);font-size:9px;letter-spacing:1.2px;text-transform:uppercase}
-.result h3{font:22px Georgia,serif;margin:0}
-.result p{font-size:12px;line-height:1.55;color:var(--muted);margin:0;flex:1}
-.result-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;color:var(--soft)}
-.result a{color:#b8e0d8;text-decoration:none}
-.result a:hover{text-decoration:underline}
+/* Directory Filters & Active Chips */
+.filters{
+display:grid;
+grid-template-columns:1.45fr 1fr 1fr 1.15fr 1fr .95fr;
+gap:9px;
+margin:15px 0 10px
+}
+.filters input,.filters select{
+width:100%;padding:11px 12px;border-radius:10px;
+border:1px solid var(--line);background:#0a2226;color:var(--ink);
+outline:none;font-size:12px
+}
+.filters input:focus,.filters select:focus{border-color:var(--mint)}
+
+.active-filters{
+display:none;
+flex-wrap:wrap;
+align-items:center;
+gap:7px;
+margin:10px 0 6px;
+padding:10px 12px;
+background:#091f23;
+border:1px solid #244a4d;
+border-radius:12px
+}
+.active-filters.show{display:flex}
+.active-filters-label{
+font-size:10px;
+text-transform:uppercase;
+letter-spacing:1.1px;
+color:var(--soft);
+font-weight:700;
+margin-right:4px
+}
+.filter-chip{
+display:inline-flex;
+align-items:center;
+gap:7px;
+background:#10373b;
+border:1px solid #487e7c;
+color:#eaf4f1;
+border-radius:20px;
+padding:5px 10px;
+font-size:11px;
+line-height:1.2
+}
+.filter-chip span.chip-key{color:var(--mint);font-weight:700}
+.filter-chip button{
+background:none;
+border:0;
+color:var(--gold);
+font-size:14px;
+font-weight:800;
+line-height:1;
+padding:0 2px;
+display:inline-flex;
+align-items:center
+}
+.filter-chip button:hover{color:#fff}
+
+.results-top{
+display:flex;justify-content:space-between;align-items:center;
+gap:12px;margin:13px 0;color:var(--muted);font-size:12px;flex-wrap:wrap
+}
+
+/* Polished Directory Cards */
+.results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.result{
+background:linear-gradient(155deg,#0b2529,#081c20);
+border:1px solid var(--line);
+border-radius:16px;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+transition:transform .2s,border-color .2s,box-shadow .2s
+}
+.result:hover{
+transform:translateY(-2px);
+border-color:#538c89;
+box-shadow:0 12px 32px #0006
+}
+.result-thumb{
+width:100%;
+height:164px;
+background:#061619;
+border-bottom:1px solid #23494c;
+overflow:hidden;
+position:relative
+}
+.result-thumb img{
+width:100%;
+height:100%;
+object-fit:cover;
+display:block
+}
+.result-thumb-credit{
+position:absolute;
+bottom:7px;
+right:8px;
+background:#051417cc;
+color:#cfe2de;
+font-size:9px;
+padding:3px 7px;
+border-radius:6px;
+max-width:85%;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis
+}
+.result-body{
+padding:16px;
+display:flex;
+flex-direction:column;
+gap:10px;
+flex:1
+}
+.result-meta-top{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:8px;
+flex-wrap:wrap
+}
+.result-pills{
+display:flex;
+flex-wrap:wrap;
+gap:5px;
+align-items:center
+}
+.meta-pill{
+font-size:9.5px;
+font-weight:700;
+letter-spacing:.7px;
+text-transform:uppercase;
+padding:4px 8px;
+border-radius:7px;
+background:#10373b;
+color:var(--mint);
+border:1px solid #2e6061
+}
+.meta-pill.cat{
+background:#0d2b30;
+color:#d7e7e4;
+border-color:#264f52
+}
+.verify-badge{
+font-size:9.5px;
+font-weight:800;
+letter-spacing:.5px;
+padding:4px 8px;
+border-radius:20px;
+white-space:nowrap
+}
+.verify-badge.verified{
+background:#123c37;
+color:#96e3cf;
+border:1px solid #3c8c7b
+}
+.verify-badge.pending{
+background:#2c2617;
+color:var(--gold);
+border:1px solid #6e5b33
+}
+.result h3{
+font:21px/1.25 Georgia,serif;
+margin:0;
+color:#fff
+}
+.result-desc-wrap{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:5px
+}
+.result-desc{
+font-size:12.5px;
+line-height:1.6;
+color:var(--muted);
+margin:0;
+display:-webkit-box;
+-webkit-line-clamp:3;
+-webkit-box-orient:vertical;
+overflow:hidden
+}
+.result-desc.expanded{
+display:block;
+-webkit-line-clamp:unset;
+overflow:visible
+}
+.desc-toggle{
+align-self:flex-start;
+background:none;
+border:0;
+padding:0;
+color:var(--gold);
+font-size:11px;
+font-weight:700
+}
+.desc-toggle:hover{text-decoration:underline}
+.result-location{
+display:inline-flex;
+align-items:center;
+gap:6px;
+align-self:flex-start;
+background:#0e2e33;
+border:1px solid #285457;
+border-radius:8px;
+padding:5px 9px;
+font-size:11px;
+color:#d8e9e5
+}
+.result-tags{
+display:flex;
+flex-wrap:wrap;
+gap:5px
+}
+.tag-btn{
+background:#091f23;
+border:1px solid #264f52;
+color:#a9c7c2;
+border-radius:20px;
+padding:3px 9px;
+font-size:10px;
+transition:.15s
+}
+.tag-btn:hover{
+background:#1d7979;
+border-color:#79b7ae;
+color:#fff
+}
+.result-foot{
+border-top:1px solid #1f4447;
+padding-top:10px;
+margin-top:auto;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+font-size:10.5px;
+color:var(--soft)
+}
+.result-source{
+min-width:0;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap
+}
+.result-link{
+color:var(--gold);
+font-weight:700;
+text-decoration:none;
+white-space:nowrap;
+flex-shrink:0
+}
+.result-link:hover{text-decoration:underline}
+.result-no-link{
+color:var(--soft);
+font-style:italic;
+white-space:nowrap;
+flex-shrink:0
+}
+
+/* Pagination Bar */
+.pagination-bar{
+display:none;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+flex-wrap:wrap;
+margin-top:20px;
+padding:14px 16px;
+background:#091f23;
+border:1px solid var(--line);
+border-radius:14px
+}
+.pagination-bar.show{display:flex}
+.pagination-info{font-size:12px;color:var(--muted)}
+.pagination-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.page-btn{
+min-width:34px;
+height:34px;
+padding:0 10px;
+border-radius:8px;
+border:1px solid var(--line);
+background:#0e2e33;
+color:var(--ink);
+font-size:11.5px;
+font-weight:600
+}
+.page-btn:hover:not(:disabled){background:#1d7979;border-color:#79b7ae}
+.page-btn.active{background:var(--gold);border-color:var(--gold);color:#142827;font-weight:800}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+
 .empty{grid-column:1/-1;text-align:center;padding:35px 20px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:13px;line-height:1.6}
 
 /* Modal and footer */
@@ -243,12 +526,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .status.show{display:block}
 .hide{display:none!important}
 
+@media(max-width:1040px){
+.filters{grid-template-columns:repeat(3,1fr)}
+}
 @media(max-width:850px){
 .globe-layout{grid-template-columns:1fr}
 .side-card{display:grid;grid-template-columns:1fr 1fr}
 .side-card h3,.side-card>p,.country-info{grid-column:1/-1}
 .category-grid{grid-template-columns:repeat(2,1fr)}
-.results{grid-template-columns:repeat(2,1fr)}
+.results{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:650px){
 .resource-groups{grid-template-columns:1fr}
@@ -482,29 +768,31 @@ header{padding:17px 0}
 </div>
 </div>
 
-<div class="filters">
-<input id="filterSearch" type="search" placeholder="Search directory…">
-<select id="filterRegion"><option value="">All continents</option></select>
-<select id="filterCategory"><option value="">All categories</option></select>
-<select id="filterType">
+<div class="filters" aria-label="Directory filters">
+<input id="filterSearch" type="search" placeholder="Search title, city, keyword, source…" aria-label="Search directory">
+<select id="filterRegion" aria-label="Filter by continent"><option value="">All continents</option></select>
+<select id="filterCountry" aria-label="Filter by country"><option value="">All countries</option></select>
+<select id="filterCategory" aria-label="Filter by category"><option value="">All categories</option></select>
+<select id="filterType" aria-label="Filter by resource type">
 <option value="">All resource types</option>
-<option>Artist</option>
-<option>Artwork / Art form</option>
-<option>Gallery / Museum</option>
-<option>Culture / Heritage</option>
-<option>Event / Exhibition</option>
-<option>Education / Research</option>
-<option>Opportunity</option>
-<option>Art business / Service</option>
-<option>WAA resource</option>
+</select>
+<select id="filterSort" aria-label="Sort directory results">
+<option value="featured">Sort: Featured &amp; Verified</option>
+<option value="newest">Sort: Newest first</option>
+<option value="title-asc">Sort: Title (A–Z)</option>
+<option value="country-asc">Sort: Country (A–Z)</option>
 </select>
 </div>
 
+<div class="active-filters" id="activeFilters" aria-live="polite"></div>
+
 <div class="results-top">
 <span id="resultCount">Loading directory…</span>
-<button class="smallbtn" id="resetFilters">Reset filters</button>
+<button class="smallbtn" id="resetFilters">Reset all filters</button>
 </div>
 <div class="results" id="results"></div>
+<div class="pagination-bar" id="paginationBar" aria-label="Directory pagination"></div>
+
 <p class="note" style="margin-top:13px">Editorial moderation: public contributions are sent privately to Worldwide Art Advocacy for review of accuracy, links, duplication, relevance and image rights before publication.</p>
 </section>
 
@@ -678,10 +966,37 @@ const CATEGORIES=[
 {icon:'🤝',title:'Art Business & Professional Services',desc:'Markets, consultants, licensing and support.'}
 ];
 
+const DEFAULT_RESOURCE_TYPES=[
+'Artist',
+'Artwork / Art form',
+'Gallery / Museum',
+'Institution',
+'Network',
+'Biennial',
+'Triennial',
+'Exhibition',
+'Foundation',
+'Gallery',
+'Cultural Center',
+'Archive',
+'Directory',
+'Database',
+'Platform',
+'Publication',
+'Art Fair',
+'Residency',
+'Culture / Heritage',
+'Event / Exhibition',
+'Education / Research',
+'Opportunity',
+'Art business / Service',
+'WAA resource'
+];
+
 const COUNTRY_DATA={
 'Africa':['Algeria','Angola','Benin','Botswana','Burkina Faso','Burundi','Cabo Verde','Cameroon','Central African Republic','Chad','Comoros','Congo','Democratic Republic of the Congo','Djibouti','Egypt','Equatorial Guinea','Eritrea','Eswatini','Ethiopia','Gabon','Gambia','Ghana','Guinea','Guinea-Bissau','Ivory Coast','Kenya','Lesotho','Liberia','Libya','Madagascar','Malawi','Mali','Mauritania','Mauritius','Morocco','Mozambique','Namibia','Niger','Nigeria','Rwanda','Sao Tome and Principe','Senegal','Seychelles','Sierra Leone','Somalia','South Africa','South Sudan','Sudan','Tanzania','Togo','Tunisia','Uganda','Zambia','Zimbabwe'],
 'Europe':['Albania','Andorra','Armenia','Austria','Azerbaijan','Belarus','Belgium','Bosnia and Herzegovina','Bulgaria','Croatia','Cyprus','Czechia','Denmark','Estonia','Finland','France','Georgia','Germany','Greece','Hungary','Iceland','Ireland','Italy','Kazakhstan','Kosovo','Latvia','Liechtenstein','Lithuania','Luxembourg','Malta','Moldova','Monaco','Montenegro','Netherlands','North Macedonia','Norway','Poland','Portugal','Romania','Russia','San Marino','Serbia','Slovakia','Slovenia','Spain','Sweden','Switzerland','Turkey','Ukraine','United Kingdom','Vatican City'],
-'Asia':['Afghanistan','Bahrain','Bangladesh','Bhutan','Brunei','Cambodia','China','India','Indonesia','Iran','Iraq','Israel','Japan','Jordan','Kuwait','Kyrgyzstan','Laos','Lebanon','Malaysia','Maldives','Mongolia','Myanmar','Nepal','North Korea','Oman','Pakistan','Palestine','Philippines','Qatar','Saudi Arabia','Singapore','South Korea','Sri Lanka','Syria','Taiwan','Tajikistan','Thailand','Timor-Leste','Turkmenistan','United Arab Emirates','Uzbekistan','Vietnam','Yemen'],
+'Asia':['Afghanistan','Bahrain','Bangladesh','Bhutan','Brunei','Cambodia','China','Hong Kong','India','Indonesia','Iran','Iraq','Israel','Japan','Jordan','Kuwait','Kyrgyzstan','Laos','Lebanon','Malaysia','Maldives','Mongolia','Myanmar','Nepal','North Korea','Oman','Pakistan','Palestine','Philippines','Qatar','Saudi Arabia','Singapore','South Korea','Sri Lanka','Syria','Taiwan','Tajikistan','Thailand','Timor-Leste','Turkmenistan','United Arab Emirates','Uzbekistan','Vietnam','Yemen'],
 'North America':['Antigua and Barbuda','Bahamas','Barbados','Belize','Canada','Costa Rica','Cuba','Dominica','Dominican Republic','El Salvador','Grenada','Guatemala','Haiti','Honduras','Jamaica','Mexico','Nicaragua','Panama','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Trinidad and Tobago','United States'],
 'Latin America & Caribbean':['Argentina','Bolivia','Brazil','Chile','Colombia','Ecuador','Guyana','Paraguay','Peru','Suriname','Uruguay','Venezuela'],
 'Oceania':['Australia','Fiji','Kiribati','Marshall Islands','Micronesia','Nauru','New Zealand','Palau','Papua New Guinea','Samoa','Solomon Islands','Tonga','Tuvalu','Vanuatu']
@@ -691,9 +1006,12 @@ const allCountries=Object.entries(COUNTRY_DATA).flatMap(
 ([region,names])=>names.map(name=>({name,region}))
 );
 
-/* Natural Earth name variations */
+/* Natural Earth & Sub-region aliases */
 const COUNTRY_ALIASES={
 'united states of america':'United States',
+'usa':'United States',
+'uk':'United Kingdom',
+'great britain':'United Kingdom',
 'united republic of tanzania':'Tanzania',
 'democratic republic of the congo':'Democratic Republic of the Congo',
 'democratic republic of congo':'Democratic Republic of the Congo',
@@ -719,7 +1037,33 @@ const COUNTRY_ALIASES={
 'syrian arab republic':'Syria',
 'lao pdr':'Laos',
 'viet nam':'Vietnam',
-'kyrgyz republic':'Kyrgyzstan'
+'kyrgyz republic':'Kyrgyzstan',
+'hong kong sar':'Hong Kong'
+};
+
+const REGION_ALIASES={
+'west africa':'Africa',
+'east africa':'Africa',
+'north africa':'Africa',
+'southern africa':'Africa',
+'central africa':'Africa',
+'southern europe':'Europe',
+'northern europe':'Europe',
+'western europe':'Europe',
+'eastern europe':'Europe',
+'central europe':'Europe',
+'east asia':'Asia',
+'south asia':'Asia',
+'southeast asia':'Asia',
+'central asia':'Asia',
+'middle east':'Asia',
+'western asia':'Asia',
+'south america':'Latin America & Caribbean',
+'central america':'Latin America & Caribbean',
+'caribbean':'Latin America & Caribbean',
+'latin america':'Latin America & Caribbean',
+'australasia':'Oceania',
+'pacific':'Oceania'
 };
 
 const COUNTRY_PROFILES={
@@ -990,6 +1334,7 @@ const SUBMISSION_BUCKET='submission-images';
 const MAX_IMAGE_BYTES=5*1024*1024;
 const ALLOWED_IMAGE_TYPES=['image/jpeg','image/png','image/webp'];
 const SUBMIT_COOLDOWN_MS=15000;
+const PAGE_SIZE=24;
 
 const CATEGORY_ID_MAP={
   '47420b16-0167-4693-999f-ca8631c6447d':'Galleries, Museums & Art Spaces',
@@ -1001,10 +1346,12 @@ const CATEGORY_ID_MAP={
 };
 
 let records=[];
+let rawSupabaseRows=[];
 let activeRegion='';
 let activeCategory='';
 let selectedCountry='';
 let countryFilter='';
+let currentPage=1;
 let publishedIds=new Set();
 let publishedCount=0;
 let globeInstance=null;
@@ -1012,6 +1359,8 @@ let globeFeatures=[];
 let supabaseClient=null;
 let dbCountries=[];
 let dbCategories=[];
+let categoryIdToLabel=new Map(Object.entries(CATEGORY_ID_MAP));
+let countryIdToLabel=new Map([['b59f3ca9-6771-4eeb-8f09-5b6f1c5e195d','Global']]);
 let lastSubmissionAt=0;
 
 const $=id=>document.getElementById(id);
@@ -1024,13 +1373,6 @@ function getSupabaseClient(){
   }
   return null;
 }
-
-const safeURL=u=>{
-try{
-const x=new URL(String(u||''),location.href);
-return ['http:','https:'].includes(x.protocol)?x.href:'#';
-}catch(e){return '#'}
-};
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
 '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -1059,6 +1401,14 @@ box.className='submit-feedback';
 box.textContent='';
 }
 
+function normalizeSearchText(str){
+return String(str||'')
+.normalize('NFD')
+.replace(/[\u0300-\u036f]/g,'')
+.toLowerCase()
+.trim();
+}
+
 function normalizeCountryName(name){
 return String(name||'')
 .normalize('NFD')
@@ -1067,6 +1417,30 @@ return String(name||'')
 .replace(/&/g,'and')
 .replace(/[^a-z0-9]+/g,' ')
 .trim();
+}
+
+function resolveCanonicalCountry(rawName){
+const trimmed=String(rawName||'').trim();
+if(!trimmed)return '';
+const norm=normalizeCountryName(trimmed);
+if(norm==='global')return 'Global';
+const alias=COUNTRY_ALIASES[norm]||trimmed;
+const match=allCountries.find(c=>normalizeCountryName(c.name)===normalizeCountryName(alias));
+return match?match.name:alias;
+}
+
+function normalizeContinent(rawRegion,countryName){
+if(countryName==='Global')return 'Global';
+const trimmed=String(rawRegion||'').trim();
+if(trimmed){
+const direct=REGIONS.find(r=>normalizeSearchText(r)===normalizeSearchText(trimmed));
+if(direct)return direct;
+const mapped=REGION_ALIASES[normalizeSearchText(trimmed)];
+if(mapped)return mapped;
+if(normalizeSearchText(trimmed)==='global')return 'Global';
+}
+const fromCountry=regionOf(countryName);
+return fromCountry||trimmed||'Global';
 }
 
 function countryFromFeature(feature){
@@ -1091,6 +1465,7 @@ return null;
 
 function regionOf(country){
 const normalized=normalizeCountryName(country);
+if(normalized==='global')return 'Global';
 const alias=COUNTRY_ALIASES[normalized]||country;
 
 return allCountries.find(c=>
@@ -1233,116 +1608,205 @@ noteBox.style.borderLeftColor='#789391';
 }
 }
 
+function isSafeHttpURL(value){
+const raw=String(value||'').trim();
+if(!raw)return false;
+try{
+const url=new URL(raw);
+return url.protocol==='https:'||url.protocol==='http:';
+}catch(e){return false;}
+}
+
+function normalizeOptionalUrl(value){
+const raw=String(value||'').trim();
+if(!raw)return '';
+if(isSafeHttpURL(raw)){
+try{return new URL(raw).href;}catch(e){return '';}
+}
+if(!/^[a-z][a-z0-9+.-]*:/i.test(raw)&&raw.includes('.')){
+const withProto='https://'+raw.replace(/^\/+/,'');
+if(isSafeHttpURL(withProto)){
+try{return new URL(withProto).href;}catch(e){return '';}
+}
+}
+return '';
+}
+
+function isUsableRecord(r){
+return Boolean(
+r&&typeof r==='object'&&
+typeof r.title==='string'&&r.title.trim()&&
+typeof r.description==='string'&&r.description.trim()
+);
+}
+
+function normalizeRecord(r,index=0){
+const canonicalCountry=resolveCanonicalCountry(r.country||'Global')||'Global';
+const normalizedRegion=normalizeContinent(r.region,canonicalCountry);
+const primaryUrl=normalizeOptionalUrl(r.url);
+const secondaryUrl=normalizeOptionalUrl(r.sourceUrl);
+const imageUrl=normalizeOptionalUrl(r.imageUrl);
+
+let tags=[];
+if(Array.isArray(r.tags)){
+tags=r.tags.map(t=>String(t||'').trim()).filter(Boolean).slice(0,25);
+}else if(typeof r.tags==='string'&&r.tags.trim()){
+tags=r.tags.split(',').map(t=>t.trim()).filter(Boolean).slice(0,25);
+}
+
+return {
+...r,
+id:typeof r.id==='string'&&r.id.trim()?r.id:`record-${Date.now()}-${index}`,
+title:r.title.trim().slice(0,180),
+type:typeof r.type==='string'&&r.type.trim()?r.type.trim():'Art resource',
+country:canonicalCountry,
+region:normalizedRegion,
+city:typeof r.city==='string'?r.city.trim():'',
+category:typeof r.category==='string'?r.category.trim():'',
+description:r.description.trim().slice(0,2000),
+url:primaryUrl||secondaryUrl||'',
+sourceUrl:secondaryUrl,
+imageUrl,
+imageCredit:typeof r.imageCredit==='string'?r.imageCredit.trim():'',
+tags,
+verified:r.verified==='verified'?'verified':'unverified',
+source:typeof r.source==='string'&&r.source.trim()?r.source.trim():'WAA Directory',
+updated:r.updated||r.created||''
+};
+}
+
 function loadRecords(){
 try{
 const saved=JSON.parse(localStorage.getItem(STORE)||'null');
 if(Array.isArray(saved)){
 records=saved.filter(isUsableRecord).map(normalizeRecord);
 }else{
-records=BASE_RECORDS.slice();
+records=BASE_RECORDS.map(normalizeRecord);
 }
 }catch(e){
-records=BASE_RECORDS.slice();
+records=BASE_RECORDS.map(normalizeRecord);
 console.warn('WAA Explorer local storage could not be read:',e);
 }
 }
 
-function isSafeHttpURL(value){
-try{
-const url=new URL(String(value||'').trim());
-return url.protocol==='https:'||url.protocol==='http:';
-}catch(e){return false;}
-}
-
-function isUsableRecord(r){
-return Boolean(r&&typeof r==='object'&&typeof r.title==='string'&&r.title.trim()&&
-typeof r.url==='string'&&isSafeHttpURL(r.url)&&
-typeof r.country==='string'&&typeof r.description==='string');
-}
-
-function normalizeRecord(r,index=0){
-return {
-...r,
- id:typeof r.id==='string'&&r.id.trim()?r.id:`record-${Date.now()}-${index}`,
- title:r.title.trim().slice(0,160),
- type:typeof r.type==='string'?r.type:'Art resource',
- country:r.country.trim(),
- region:typeof r.region==='string'&&r.region?r.region:(regionOf(r.country)||'Global'),
- city:typeof r.city==='string'?r.city:'',
- category:typeof r.category==='string'?r.category:'',
- description:r.description.trim().slice(0,1200),
- url:new URL(r.url).href,
- tags:Array.isArray(r.tags)?r.tags.filter(t=>typeof t==='string').slice(0,30):[],
- verified:r.verified==='verified'?'verified':'unverified',
- source:typeof r.source==='string'?r.source:'Source not specified'
-};
-}
-
 function mapSupabaseRow(row){
-  const mappedCountry=(row.country||'').trim();
-  const mappedRegion=row.region||regionOf(mappedCountry)||'Global';
-  const mappedCategory=row.category||CATEGORY_ID_MAP[row.category_id]||'';
-  const mappedDesc=row.short_description||row.description||'';
-  const mappedUrl=row.official_url||'https://worldwideartadvocacy.org/';
+  const lookupCountry=row.country_id?countryIdToLabel.get(row.country_id):'';
+  const mappedCountry=resolveCanonicalCountry(lookupCountry||row.country||'Global')||'Global';
+  const mappedRegion=normalizeContinent(row.region,mappedCountry);
+  const lookupCategory=row.category_id?categoryIdToLabel.get(row.category_id):'';
+  const mappedCategory=(lookupCategory||row.category||'').trim();
+  const mappedDesc=(row.short_description||row.description||'').trim();
+  const mappedUrl=row.official_url||row.source_url||'';
+
+  let sourceLabel='WAA Directory';
+  if(row.external_identifier&&String(row.external_identifier).trim()){
+    sourceLabel=String(row.external_identifier).trim();
+  }else if(row.official_url&&isSafeHttpURL(row.official_url)){
+    try{
+      sourceLabel=new URL(row.official_url).hostname.replace(/^www\./,'');
+    }catch(e){
+      sourceLabel='Official source';
+    }
+  }else if(row.contact_email&&String(row.contact_email).trim()){
+    sourceLabel=String(row.contact_email).trim();
+  }
 
   return normalizeRecord({
     id:row.id,
     title:row.title,
     type:row.resource_type||'Art resource',
-    country:mappedCountry||'Global',
+    country:mappedCountry,
     region:mappedRegion,
     city:row.city||'',
     category:mappedCategory,
     description:mappedDesc,
     url:mappedUrl,
-    tags:Array.isArray(row.keywords)?row.keywords:[],
+    sourceUrl:row.source_url||'',
+    imageUrl:row.image_url||'',
+    imageCredit:row.image_credit||'',
+    tags:row.keywords||[],
     verified:row.editorial_status==='verified'?'verified':'unverified',
-    source:row.external_identifier||row.contact_email||'WAA Directory'
+    source:sourceLabel,
+    updated:row.updated_at||row.created_at||''
   });
+}
+
+function rebuildDirectoryFromRaw(){
+  const published=(Array.isArray(rawSupabaseRows)?rawSupabaseRows:[])
+    .map(mapSupabaseRow)
+    .filter(isUsableRecord);
+
+  publishedIds=new Set(published.map(r=>r.id));
+  publishedCount=published.length;
+
+  const localEntries=records.filter(r=>r&&r.id&&!publishedIds.has(r.id));
+  const merged=new Map();
+  published.forEach(r=>merged.set(r.id,r));
+  localEntries.forEach((r,i)=>merged.set(r.id||('local-'+i),normalizeRecord(r,i)));
+
+  records=[...merged.values()];
+  populateDynamicFilterOptions();
+  renderResults();
+}
+
+async function fetchAllPublishedResources(client){
+  const batchSize=1000;
+  const maxRows=10000;
+  let allRows=[];
+
+  const safeColumns=`
+    id,title,slug,resource_type,category_id,country_id,country,region,city,
+    description,short_description,official_url,contact_email,keywords,
+    external_identifier,editorial_status,publication_status,lifecycle_status,created_at
+  `;
+
+  for(let from=0;from<maxRows;from+=batchSize){
+    const to=from+batchSize-1;
+    let {data,error}=await client
+      .from('resources')
+      .select(safeColumns)
+      .eq('publication_status','published')
+      .eq('editorial_status','verified')
+      .eq('lifecycle_status','active')
+      .order('created_at',{ascending:false})
+      .range(from,to);
+
+    if(error){
+      // Fallback if created_at or any optional column differs in schema
+      const retry=await client
+        .from('resources')
+        .select('*')
+        .eq('publication_status','published')
+        .eq('editorial_status','verified')
+        .eq('lifecycle_status','active')
+        .range(from,to);
+      if(retry.error)throw retry.error;
+      data=retry.data;
+    }
+
+    if(!Array.isArray(data)||!data.length)break;
+    allRows=allRows.concat(data);
+    if(data.length<batchSize)break;
+  }
+
+  return allRows;
 }
 
 async function loadPublishedRecords(){
   const client=getSupabaseClient();
   if(!client){
     console.warn('Supabase JS client not yet available.');
+    populateDynamicFilterOptions();
     renderResults();
     return;
   }
 
   try{
-    const {data,error}=await client
-      .from('resources')
-      .select(`
-        id,title,slug,resource_type,category_id,country_id,country,region,city,
-        description,short_description,official_url,contact_email,keywords,
-        external_identifier,editorial_status,publication_status,lifecycle_status
-      `)
-      .eq('publication_status','published')
-      .eq('editorial_status','verified')
-      .eq('lifecycle_status','active')
-      .order('created_at',{ascending:false});
-
-    if(error)throw error;
-
-    const published=(Array.isArray(data)?data:[])
-      .map(mapSupabaseRow)
-      .filter(isUsableRecord);
-
-    publishedIds=new Set(published.map(r=>r.id));
-    publishedCount=published.length;
-
-    const merged=new Map();
-    published.forEach(r=>merged.set(r.id,r));
-
-    records.forEach((r,i)=>{
-      if(r&&r.id&&!publishedIds.has(r.id))merged.set(r.id,r);
-      else if(r&&!r.id)merged.set('local-'+i,normalizeRecord(r,i));
-    });
-
-    records=[...merged.values()];
-    renderResults();
+    rawSupabaseRows=await fetchAllPublishedResources(client);
+    rebuildDirectoryFromRaw();
   }catch(error){
     console.warn('WAA Supabase published directory fetch error:',error);
+    populateDynamicFilterOptions();
     renderResults();
   }
 }
@@ -1377,6 +1841,11 @@ function populateCountryDropdownFromDirectory() {
   if (!countrySelect) return;
 
   countrySelect.innerHTML = '<option value="">Choose country (optional for global)</option>';
+
+  const globalOpt = document.createElement('option');
+  globalOpt.value = 'Global';
+  globalOpt.textContent = 'Global / International';
+  countrySelect.appendChild(globalOpt);
 
   const groups = {};
   REGIONS.forEach(r => (groups[r] = []));
@@ -1430,6 +1899,8 @@ async function loadSubmissionLookups() {
         .sort((a, b) => a.label.localeCompare(b.label));
 
       dbCategories = normalizedCats;
+      normalizedCats.forEach(cat => categoryIdToLabel.set(cat.id, cat.label));
+
       catSelect.innerHTML = '<option value="">Choose category</option>';
       normalizedCats.forEach(cat => {
         const opt = document.createElement('option');
@@ -1449,6 +1920,12 @@ async function loadSubmissionLookups() {
           label: pickDisplayLabel(row, ['country_name', 'name', 'title'])
         }))
         .filter(item => item.id && item.label);
+
+      dbCountries.forEach(c => countryIdToLabel.set(c.id, resolveCanonicalCountry(c.label) || c.label));
+    }
+
+    if (rawSupabaseRows.length) {
+      rebuildDirectoryFromRaw();
     }
   } catch (err) {
     console.warn('WAA submission lookup load error:', err);
@@ -1493,6 +1970,58 @@ og.appendChild(o);
 });
 sel.appendChild(og);
 });
+
+populateDynamicFilterOptions();
+}
+
+function populateDynamicFilterOptions(){
+  const filterCountryEl=$('filterCountry');
+  if(filterCountryEl){
+    const prevCountry=filterCountryEl.value||countryFilter;
+    const countrySet=new Set(['Global']);
+    allCountries.forEach(c=>countrySet.add(c.name));
+    records.forEach(r=>{if(r.country)countrySet.add(r.country);});
+
+    const sortedCountries=[...countrySet].sort((a,b)=>{
+      if(a==='Global')return -1;
+      if(b==='Global')return 1;
+      return a.localeCompare(b);
+    });
+
+    filterCountryEl.innerHTML='<option value="">All countries</option>';
+    sortedCountries.forEach(name=>{
+      const opt=document.createElement('option');
+      opt.value=name;
+      opt.textContent=name==='Global'?'Global / International':name;
+      filterCountryEl.appendChild(opt);
+    });
+    if(prevCountry&&sortedCountries.some(c=>normalizeCountryName(c)===normalizeCountryName(prevCountry))){
+      const exact=sortedCountries.find(c=>normalizeCountryName(c)===normalizeCountryName(prevCountry));
+      filterCountryEl.value=exact;
+    }
+  }
+
+  const filterTypeEl=$('filterType');
+  if(filterTypeEl){
+    const prevType=filterTypeEl.value;
+    const typeMap=new Map();
+    DEFAULT_RESOURCE_TYPES.forEach(t=>typeMap.set(t.toLowerCase(),t));
+    records.forEach(r=>{
+      if(r.type&&!typeMap.has(r.type.toLowerCase())){
+        typeMap.set(r.type.toLowerCase(),r.type);
+      }
+    });
+
+    const sortedTypes=[...typeMap.values()].sort((a,b)=>a.localeCompare(b));
+    filterTypeEl.innerHTML='<option value="">All resource types</option>';
+    sortedTypes.forEach(t=>{
+      const opt=document.createElement('option');
+      opt.value=t;
+      opt.textContent=t;
+      filterTypeEl.appendChild(opt);
+    });
+    if(prevType)filterTypeEl.value=prevType;
+  }
 }
 
 function buildCategories(){
@@ -1510,6 +2039,7 @@ document.querySelectorAll('.category').forEach((x,i)=>{
 x.classList.toggle('active',CATEGORIES[i].title===activeCategory);
 });
 $('filterCategory').value=activeCategory;
+currentPage=1;
 renderResults();
 $('directory').scrollIntoView({behavior:'smooth'});
 });
@@ -1523,17 +2053,34 @@ $('filterCategory').appendChild(o);
 });
 }
 
+function syncCountryControls(name){
+const canonical=resolveCanonicalCountry(name);
+selectedCountry=canonical;
+countryFilter=canonical;
+
+const globeSel=$('countrySelect');
+const dirSel=$('filterCountry');
+
+if(globeSel){
+const hasGlobeOpt=[...globeSel.options].some(o=>o.value===canonical);
+globeSel.value=hasGlobeOpt?canonical:'';
+}
+if(dirSel){
+const hasDirOpt=[...dirSel.options].some(o=>o.value===canonical);
+dirSel.value=hasDirOpt?canonical:'';
+}
+}
+
 function selectRegion(region){
 activeRegion=region;
-countryFilter='';
-selectedCountry='';
+syncCountryControls('');
+currentPage=1;
 
 document.querySelectorAll('.region-btn').forEach(b=>{
 b.classList.toggle('active',b.dataset.region===region);
 });
 
 $('filterRegion').value=region;
-$('countrySelect').value='';
 $('countryInfo').classList.remove('show');
 
 if(globeInstance){
@@ -1553,114 +2100,381 @@ renderResults();
 updateGlobeSelection();
 }
 
-function selectCountry(name,fromGlobe=false){
-if(!name)return;
+function selectCountry(name,options={}){
+const {fromGlobe=false,fromDirectory=false,preserveSearch=false}=options;
+if(!name){
+clearCountrySelection();
+return;
+}
 
-selectedCountry=name;
-countryFilter=name;
+const canonical=resolveCanonicalCountry(name);
+syncCountryControls(canonical);
+currentPage=1;
 
-const region=regionOf(name);
-activeRegion=region;
+const region=regionOf(canonical);
+activeRegion=region&&region!=='Global'?region:'';
 
 document.querySelectorAll('.region-btn').forEach(b=>{
-b.classList.toggle('active',b.dataset.region===region);
+b.classList.toggle('active',b.dataset.region===activeRegion);
 });
 
-const match=allCountries.find(c=>
-normalizeCountryName(c.name)===normalizeCountryName(name)
-);
-
-$('countrySelect').value=match?match.name:'';
-
-renderCountryProfile(name,region);
+if(canonical==='Global'){
+$('countryInfo').classList.remove('show');
+}else{
+renderCountryProfile(canonical,region);
 $('countryInfo').classList.add('show');
+}
 
-$('filterRegion').value=region;
+$('filterRegion').value=activeRegion;
+if(!preserveSearch&&!fromDirectory){
 $('filterSearch').value='';
+}
 
 renderResults();
 updateGlobeSelection();
 
-if(!fromGlobe){
+if(!fromGlobe&&!fromDirectory&&canonical!=='Global'){
 $('countryInfo').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 }
 
+function clearCountrySelection(){
+$('countryInfo').classList.remove('show');
+syncCountryControls('');
+$('filterRegion').value='';
+activeRegion='';
+currentPage=1;
+document.querySelectorAll('.region-btn').forEach(b=>b.classList.remove('active'));
+renderResults();
+updateGlobeSelection();
+}
+
 function recordMatches(r,q){
-const hay=[
-r.title,r.type,r.country,r.region,r.city,r.category,
-r.description,(r.tags||[]).join(' '),r.source
-].join(' ').toLowerCase();
-return !q||hay.includes(q.toLowerCase());
+const normQuery=normalizeSearchText(q);
+if(!normQuery)return true;
+
+const tokens=normQuery.split(/\s+/).filter(Boolean);
+if(!tokens.length)return true;
+
+const hay=normalizeSearchText([
+r.title,
+r.type,
+r.country,
+r.region,
+r.city,
+r.category,
+r.description,
+(r.tags||[]).join(' '),
+r.source
+].join(' '));
+
+return tokens.every(token=>hay.includes(token));
+}
+
+function sortRecords(list,sortMode){
+const copy=list.slice();
+if(sortMode==='title-asc'){
+return copy.sort((a,b)=>a.title.localeCompare(b.title));
+}
+if(sortMode==='country-asc'){
+return copy.sort((a,b)=>{
+const cCmp=a.country.localeCompare(b.country);
+return cCmp!==0?cCmp:a.title.localeCompare(b.title);
+});
+}
+if(sortMode==='newest'){
+return copy.sort((a,b)=>{
+const ta=Date.parse(a.updated||'')||0;
+const tb=Date.parse(b.updated||'')||0;
+if(tb!==ta)return tb-ta;
+return a.title.localeCompare(b.title);
+});
+}
+return copy.sort((a,b)=>{
+const va=a.verified==='verified'?1:0;
+const vb=b.verified==='verified'?1:0;
+if(vb!==va)return vb-va;
+const pa=publishedIds.has(a.id)?1:0;
+const pb=publishedIds.has(b.id)?1:0;
+if(pb!==pa)return pb-pa;
+return a.title.localeCompare(b.title);
+});
+}
+
+function renderActiveFilterChips(){
+const bar=$('activeFilters');
+if(!bar)return;
+
+const q=$('filterSearch').value.trim();
+const reg=$('filterRegion').value;
+const ctry=countryFilter||$('filterCountry').value;
+const cat=$('filterCategory').value;
+const typ=$('filterType').value;
+
+const chips=[];
+if(reg)chips.push({key:'Continent',val:reg,clear:()=>{
+activeRegion='';
+$('filterRegion').value='';
+document.querySelectorAll('.region-btn').forEach(b=>b.classList.remove('active'));
+}});
+if(ctry)chips.push({key:'Country',val:ctry,clear:()=>{
+syncCountryControls('');
+$('countryInfo').classList.remove('show');
+updateGlobeSelection();
+}});
+if(cat)chips.push({key:'Category',val:cat,clear:()=>{
+activeCategory='';
+$('filterCategory').value='';
+document.querySelectorAll('.category').forEach(b=>b.classList.remove('active'));
+}});
+if(typ)chips.push({key:'Type',val:typ,clear:()=>{
+$('filterType').value='';
+}});
+if(q)chips.push({key:'Search',val:`“${q}”`,clear:()=>{
+$('filterSearch').value='';
+$('globalSearch').value='';
+}});
+
+if(!chips.length){
+bar.classList.remove('show');
+bar.innerHTML='';
+return;
+}
+
+bar.classList.add('show');
+bar.innerHTML='<span class="active-filters-label">Active filters:</span>';
+
+chips.forEach(chip=>{
+const span=document.createElement('span');
+span.className='filter-chip';
+span.innerHTML=`<span class="chip-key">${esc(chip.key)}:</span> ${esc(chip.val)} <button type="button" aria-label="Remove ${esc(chip.key)} filter">×</button>`;
+span.querySelector('button').addEventListener('click',()=>{
+chip.clear();
+currentPage=1;
+renderResults();
+});
+bar.appendChild(span);
+});
+}
+
+function renderPagination(totalItems,totalPages){
+const bar=$('paginationBar');
+if(!bar)return;
+
+if(totalPages<=1){
+bar.classList.remove('show');
+bar.innerHTML='';
+return;
+}
+
+const startIdx=(currentPage-1)*PAGE_SIZE+1;
+const endIdx=Math.min(currentPage*PAGE_SIZE,totalItems);
+
+bar.classList.add('show');
+bar.innerHTML=`
+<div class="pagination-info">Showing <strong>${startIdx}–${endIdx}</strong> of <strong>${totalItems}</strong> matching resources (Page ${currentPage} of ${totalPages})</div>
+<div class="pagination-controls" id="pageBtnGroup"></div>
+`;
+
+const group=$('pageBtnGroup');
+
+const makeBtn=(label,page,disabled=false,active=false)=>{
+const b=document.createElement('button');
+b.type='button';
+b.className='page-btn'+(active?' active':'');
+b.textContent=label;
+b.disabled=disabled;
+if(!disabled&&!active){
+b.addEventListener('click',()=>{
+currentPage=page;
+renderResults();
+$('directory').scrollIntoView({behavior:'smooth',block:'start'});
+});
+}
+return b;
+};
+
+group.appendChild(makeBtn('← Prev',currentPage-1,currentPage===1));
+
+const pages=new Set([1,totalPages,currentPage-1,currentPage,currentPage+1]);
+const validPages=[...pages].filter(p=>p>=1&&p<=totalPages).sort((a,b)=>a-b);
+
+let lastP=0;
+validPages.forEach(p=>{
+if(lastP&&p-lastP>1){
+const dots=document.createElement('span');
+dots.textContent='…';
+dots.style.color='var(--soft)';
+dots.style.padding='0 4px';
+group.appendChild(dots);
+}
+group.appendChild(makeBtn(String(p),p,false,p===currentPage));
+lastP=p;
+});
+
+group.appendChild(makeBtn('Next →',currentPage+1,currentPage===totalPages));
 }
 
 function renderResults(){
 const q=$('filterSearch').value.trim();
 const reg=$('filterRegion').value;
+const ctry=(countryFilter||$('filterCountry').value||'').trim();
 const cat=$('filterCategory').value;
 const typ=$('filterType').value;
+const sortMode=$('filterSort')?$('filterSort').value:'featured';
 
-const list=records.filter(r=>
-(!countryFilter||String(r.country||'').toLowerCase()==='global'||String(r.country||'').toLowerCase()===countryFilter.toLowerCase())&&
-(!reg||r.region===reg||r.region==='Global')&&
-(!cat||r.category===cat)&&
-(!typ||r.type===typ)&&
-recordMatches(r,q)
-);
+renderActiveFilterChips();
+
+const filtered=records.filter(r=>{
+const rCountryNorm=normalizeCountryName(r.country);
+const targetCountryNorm=normalizeCountryName(ctry);
+
+const matchesCountry=!targetCountryNorm
+  ?true
+  :(targetCountryNorm==='global'
+    ?rCountryNorm==='global'
+    :(rCountryNorm===targetCountryNorm||rCountryNorm==='global'));
+
+const matchesRegion=!reg
+  ?true
+  :(r.region===reg||r.region==='Global');
+
+const matchesCategory=!cat||r.category===cat;
+const matchesType=!typ||r.type.toLowerCase()===typ.toLowerCase();
+
+return matchesCountry&&matchesRegion&&matchesCategory&&matchesType&&recordMatches(r,q);
+});
+
+const sorted=sortRecords(filtered,sortMode);
+const totalItems=sorted.length;
+const totalPages=Math.max(1,Math.ceil(totalItems/PAGE_SIZE));
+if(currentPage>totalPages)currentPage=totalPages;
+
+const startIdx=(currentPage-1)*PAGE_SIZE;
+const pageItems=sorted.slice(startIdx,startIdx+PAGE_SIZE);
 
 const localCount=records.filter(r=>!publishedIds.has(r.id)).length;
+const showingText=totalItems>PAGE_SIZE
+  ?`Showing ${startIdx+1}–${Math.min(startIdx+PAGE_SIZE,totalItems)} of ${totalItems} matching`
+  :`${totalItems} ${totalItems===1?'resource':'resources'} found`;
 
 $('resultCount').textContent=
-`${list.length} ${list.length===1?'resource':'resources'} found · ${publishedCount} published · ${localCount} local`;
+`${showingText} · ${publishedCount} published · ${localCount} local`;
 
 const box=$('results');
 box.innerHTML='';
 
-if(!list.length){
+if(!pageItems.length){
 box.innerHTML=`
 <div class="empty">
 <strong>No matching directory entries yet.</strong><br>
 There are currently no matching records for this selection.
-WAA can expand this country directory as resources are researched and verified.
+WAA can expand this directory as resources are researched and verified.
 <br><br>
 <button class="primary" id="emptyAdd" style="padding:9px 14px;font-size:11px;border-radius:9px">＋ Contribute a resource</button>
 </div>`;
 const a=$('emptyAdd');
 if(a)a.onclick=openModal;
+renderPagination(0,0);
 return;
 }
 
-list.forEach(r=>{
+pageItems.forEach(r=>{
 const card=document.createElement('article');
 card.className='result';
-const verified=r.verified==='verified'?'WAA verified':'Verification pending';
-const origin=publishedIds.has(r.id)?'WAA published':'Local entry';
+
+const isVerified=r.verified==='verified';
+const badgeClass=isVerified?'verified':'pending';
+const badgeText=isVerified?'✓ WAA Verified':'Pending Review';
+
+const locationParts=[];
+if(r.city)locationParts.push(r.city);
+if(r.country)locationParts.push(r.country);
+let locationLabel=locationParts.join(', ')||'Global';
+if(r.region&&r.region!=='Global'&&r.region!==r.country){
+locationLabel+=` · ${r.region}`;
+}
+
+const hasLongDesc=r.description.length>195;
+const tags=(r.tags||[]).slice(0,5);
+const hasValidUrl=isSafeHttpURL(r.url);
+
+let thumbHtml='';
+if(r.imageUrl&&isSafeHttpURL(r.imageUrl)){
+thumbHtml=`
+<div class="result-thumb">
+<img src="${esc(r.imageUrl)}" alt="${esc(r.title)}" loading="lazy" onerror="this.parentElement.remove()">
+${r.imageCredit?`<span class="result-thumb-credit">${esc(r.imageCredit)}</span>`:''}
+</div>`;
+}
 
 card.innerHTML=`
-<div class="tag">${esc(r.type)} · ${esc(r.category||'Uncategorised')}</div>
-<h3>${esc(r.title)}</h3>
-<p>${esc(r.description)}</p>
-<div class="result-foot">
-<span>${esc([r.city,r.country].filter(Boolean).join(', '))}</span>
-<span>${esc(verified)}</span>
-</div>
-<div class="result-foot">
-<span>${esc(origin)} · ${esc(r.source||'Source not specified')}</span>
-<a href="${esc(safeURL(r.url))}" target="_blank" rel="noopener noreferrer">Visit source ↗</a>
+${thumbHtml}
+<div class="result-body">
+  <div class="result-meta-top">
+    <div class="result-pills">
+      <span class="meta-pill">${esc(r.type)}</span>
+      ${r.category?`<span class="meta-pill cat">${esc(r.category)}</span>`:''}
+    </div>
+    <span class="verify-badge ${badgeClass}">${badgeText}</span>
+  </div>
+
+  <h3>${esc(r.title)}</h3>
+
+  <div class="result-desc-wrap">
+    <p class="result-desc">${esc(r.description)}</p>
+    ${hasLongDesc?'<button type="button" class="desc-toggle" aria-expanded="false">Read more</button>':''}
+  </div>
+
+  <div class="result-location" title="Location">
+    <span>📍</span>
+    <span>${esc(locationLabel)}</span>
+  </div>
+
+  ${tags.length?`<div class="result-tags">${tags.map(t=>`<button type="button" class="tag-btn" data-tag="${esc(t)}">#${esc(t)}</button>`).join('')}</div>`:''}
+
+  <div class="result-foot">
+    <span class="result-source" title="${esc(r.source)}">Source: ${esc(r.source)}</span>
+    ${hasValidUrl
+      ?`<a class="result-link" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">Visit official site ↗</a>`
+      :`<span class="result-no-link">No external link</span>`}
+  </div>
 </div>`;
+
+const toggleBtn=card.querySelector('.desc-toggle');
+if(toggleBtn){
+const descEl=card.querySelector('.result-desc');
+toggleBtn.addEventListener('click',()=>{
+const expanded=descEl.classList.toggle('expanded');
+toggleBtn.textContent=expanded?'Show less':'Read more';
+toggleBtn.setAttribute('aria-expanded',String(expanded));
+});
+}
+
+card.querySelectorAll('.tag-btn').forEach(tagBtn=>{
+tagBtn.addEventListener('click',()=>{
+const tagVal=tagBtn.dataset.tag||'';
+$('filterSearch').value=tagVal;
+currentPage=1;
+renderResults();
+$('directory').scrollIntoView({behavior:'smooth',block:'start'});
+});
+});
+
 box.appendChild(card);
 });
+
+renderPagination(totalItems,totalPages);
 }
 
 function runSearch(){
 const q=$('globalSearch').value.trim();
 
-countryFilter='';
-selectedCountry='';
+syncCountryControls('');
 activeRegion='';
 activeCategory='';
+currentPage=1;
 $('countryInfo').classList.remove('show');
-$('countrySelect').value='';
 $('filterSearch').value=q;
 $('filterRegion').value='';
 $('filterCategory').value='';
@@ -1727,13 +2541,11 @@ $('entryForm').addEventListener('submit',async e=>{
 e.preventDefault();
 clearSubmitFeedback();
 
-// 1. Honeypot anti-spam trap
 if($('websiteConfirm').value.trim()!==''){
 showSubmitFeedback('error','Submission blocked by automated form check.');
 return;
 }
 
-// 2. Cooldown guard against rapid duplicate clicks
 const now=Date.now();
 if(now-lastSubmissionAt<SUBMIT_COOLDOWN_MS){
 const waitSec=Math.ceil((SUBMIT_COOLDOWN_MS-(now-lastSubmissionAt))/1000);
@@ -1927,51 +2739,65 @@ runSearch();
 });
 
 $('countrySelect').addEventListener('change',e=>selectCountry(e.target.value));
+$('filterCountry').addEventListener('change',e=>{
+selectCountry(e.target.value,{fromDirectory:true,preserveSearch:true});
+});
 
 $('countrySearch').addEventListener('click',()=>{
 if(selectedCountry){
-countryFilter=selectedCountry;
+syncCountryControls(selectedCountry);
 $('filterSearch').value='';
+currentPage=1;
 renderResults();
 $('directory').scrollIntoView({behavior:'smooth'});
 }
 });
 
-$('clearCountry').addEventListener('click',()=>{
-$('countryInfo').classList.remove('show');
-$('countrySelect').value='';
-selectedCountry='';
-countryFilter='';
-$('filterRegion').value='';
-activeRegion='';
-document.querySelectorAll('.region-btn').forEach(b=>b.classList.remove('active'));
-renderResults();
-updateGlobeSelection();
-});
+$('clearCountry').addEventListener('click',clearCountrySelection);
 
 $('filterRegion').addEventListener('change',()=>{
-countryFilter='';
-selectedCountry='';
-$('countrySelect').value='';
+const reg=$('filterRegion').value;
+activeRegion=reg;
+syncCountryControls('');
 $('countryInfo').classList.remove('show');
+document.querySelectorAll('.region-btn').forEach(b=>{
+b.classList.toggle('active',b.dataset.region===reg);
+});
+currentPage=1;
 renderResults();
 updateGlobeSelection();
 });
 
-$('filterSearch').addEventListener('input',renderResults);
-['filterCategory','filterType'].forEach(id=>$(id).addEventListener('change',renderResults));
+$('filterSearch').addEventListener('input',()=>{
+currentPage=1;
+renderResults();
+});
+
+['filterCategory','filterType','filterSort'].forEach(id=>{
+$(id).addEventListener('change',()=>{
+if(id==='filterCategory'){
+activeCategory=$('filterCategory').value;
+document.querySelectorAll('.category').forEach((x,i)=>{
+x.classList.toggle('active',CATEGORIES[i].title===activeCategory);
+});
+}
+currentPage=1;
+renderResults();
+});
+});
 
 $('resetFilters').addEventListener('click',()=>{
 $('filterSearch').value='';
+$('globalSearch').value='';
 $('filterRegion').value='';
 $('filterCategory').value='';
 $('filterType').value='';
-countryFilter='';
-selectedCountry='';
+$('filterSort').value='featured';
+syncCountryControls('');
 activeRegion='';
 activeCategory='';
+currentPage=1;
 $('countryInfo').classList.remove('show');
-$('countrySelect').value='';
 document.querySelectorAll('.region-btn').forEach(b=>b.classList.remove('active'));
 document.querySelectorAll('.category').forEach(b=>b.classList.remove('active'));
 renderResults();
@@ -2068,7 +2894,7 @@ f.properties?.ADMIN||
 f.properties?.NAME||
 f.properties?.name;
 
-if(name)selectCountry(name,true);
+if(name)selectCountry(name,{fromGlobe:true});
 })
 .onPolygonHover(f=>{
 el.style.cursor=f?'pointer':'grab';
